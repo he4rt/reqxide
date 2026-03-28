@@ -107,6 +107,21 @@ function createStubWrapper(array $config = []): FfiWrapper
         {
             $this->calls[] = ['method' => 'slistFreeAll', 'args' => []];
         }
+
+        public function fopen(string $path, string $mode): CData
+        {
+            $this->calls[] = ['method' => 'fopen', 'args' => [$path, $mode]];
+
+            $ffi = FFI::cdef('typedef int dummy;');
+
+            /** @var CData */
+            return $ffi->new('dummy');
+        }
+
+        public function fclose(CData $fp): void
+        {
+            $this->calls[] = ['method' => 'fclose', 'args' => []];
+        }
     };
 }
 

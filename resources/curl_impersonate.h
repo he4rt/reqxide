@@ -12,6 +12,11 @@ struct curl_slist {
     struct curl_slist *next;
 };
 
+// C stdio (for temp file response capture)
+typedef void FILE;
+FILE *fopen(const char *path, const char *mode);
+int fclose(FILE *stream);
+
 // Standard curl functions
 CURL *curl_easy_init(void);
 void curl_easy_cleanup(CURL *curl);

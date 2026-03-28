@@ -104,6 +104,23 @@ class FfiWrapper
         }
     }
 
+    public function fopen(string $path, string $mode): CData
+    {
+        /** @var CData|null $fp */
+        $fp = $this->ffi->fopen($path, $mode);
+
+        if ($fp === null) {
+            throw new FfiException('fopen() failed for path: '.$path);
+        }
+
+        return $fp;
+    }
+
+    public function fclose(CData $fp): void
+    {
+        $this->ffi->fclose($fp);
+    }
+
     /**
      * Load libcurl-impersonate with RTLD_DEEPBIND to avoid symbol collision
      * with PHP's ext/curl (which loads standard libcurl).

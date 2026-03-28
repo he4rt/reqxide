@@ -26,10 +26,9 @@ use Reqxide\Transport\Ffi\FfiWrapper;
 /**
  * FFI transport using libcurl-impersonate for full TLS/HTTP2 fingerprint control.
  *
- * @todo Response body and header capture is not yet implemented. PHP FFI does not
- *       natively support C function pointer callbacks (CURLOPT_WRITEFUNCTION),
- *       requiring either a temp-file approach or a custom C shim. Use CurlTransport
- *       as the production transport until this is resolved.
+ * Response capture uses temp files (CURLOPT_WRITEDATA/CURLOPT_HEADERDATA) since
+ * PHP FFI cannot register C function pointer callbacks (CURLOPT_WRITEFUNCTION).
+ * Temp files are cleaned up automatically in the finally block.
  */
 final class FfiTransport implements TransportInterface
 {
@@ -87,6 +86,11 @@ final class FfiTransport implements TransportInterface
 
     private const int CURLOPT_HTTP2_WINDOW_UPDATE = 320;
 
+    // Response capture via temp files
+    private const int CURLOPT_WRITEDATA = 10001;
+
+    private const int CURLOPT_HEADERDATA = 10029;
+
     // Info and version constants
     private const int CURLINFO_RESPONSE_CODE = 2097154;
 
@@ -111,6 +115,15 @@ final class FfiTransport implements TransportInterface
     ): ResponseInterface {
         $handle = $this->wrapper->easyInit();
         $headerList = null;
+        $bodyFile = tempnam(sys_get_temp_dir(), 'reqxide_body_');
+        $headerFile = tempnam(sys_get_temp_dir(), 'reqxide_hdr_');
+
+        if ($bodyFile === false || $headerFile === false) {
+            throw new FfiException('Failed to create temp files for response capture.');
+        }
+
+        $bodyFp = $this->wrapper->fopen($bodyFile, 'wb');
+        $headerFp = $this->wrapper->fopen($headerFile, 'wb');
 
         try {
             $this->applyRequest($handle, $request);
@@ -119,12 +132,16 @@ final class FfiTransport implements TransportInterface
             $headerList = $this->applyHeaders($handle, $request, $profile);
             $this->applyTransportOptions($handle, $options);
 
+            // Redirect response body and headers to temp files
+            $this->wrapper->easySetopt($handle, self::CURLOPT_WRITEDATA, $bodyFp);
+            $this->wrapper->easySetopt($handle, self::CURLOPT_HEADERDATA, $headerFp);
+
             // Disable redirect following (middleware handles it)
-            $this->wrapper->easySetopt($handle, self::CURLOPT_FOLLOWLOCATION, 0); // CURLOPT_FOLLOWLOCATION
+            $this->wrapper->easySetopt($handle, self::CURLOPT_FOLLOWLOCATION, 0);
 
             $result = $this->wrapper->easyPerform($handle);
 
-            if ($result !== 0) { // CURLE_OK = 0
+            if ($result !== 0) {
                 throw new NetworkException(
                     $request,
                     'curl_impersonate error: '.$this->wrapper->easyStrerror($result),
@@ -132,16 +149,46 @@ final class FfiTransport implements TransportInterface
                 );
             }
 
-            // Get status code via CURLINFO_RESPONSE_CODE
+            // Close file handles so data is flushed
+            $this->wrapper->fclose($bodyFp);
+            $this->wrapper->fclose($headerFp);
+            $bodyFp = null;
+            $headerFp = null;
+
+            // Read captured response
+            $body = file_get_contents($bodyFile);
+            $rawHeaders = file_get_contents($headerFile);
+
+            // Get status code
             $statusCode = $this->wrapper->easyGetinfo($handle, self::CURLINFO_RESPONSE_CODE);
 
-            return new Response($statusCode, [], '');
+            // Parse response headers
+            $headers = $this->parseResponseHeaders($rawHeaders !== false ? $rawHeaders : '');
+
+            return new Response($statusCode, $headers, $body !== false ? $body : '');
         } finally {
             if ($headerList !== null) {
                 $this->wrapper->slistFreeAll($headerList);
             }
 
+            if ($bodyFp !== null) {
+                $this->wrapper->fclose($bodyFp);
+            }
+
+            if ($headerFp !== null) {
+                $this->wrapper->fclose($headerFp);
+            }
+
             $this->wrapper->easyCleanup($handle);
+
+            // Clean up temp files
+            if (file_exists($bodyFile)) {
+                unlink($bodyFile);
+            }
+
+            if (file_exists($headerFile)) {
+                unlink($headerFile);
+            }
         }
     }
 
@@ -429,5 +476,36 @@ final class FfiTransport implements TransportInterface
         };
 
         return $minVersion | $maxVersion;
+    }
+
+    /**
+     * Parse raw HTTP headers into an associative array.
+     *
+     * @return array<string, list<string>>
+     */
+    private function parseResponseHeaders(string $raw): array
+    {
+        $headers = [];
+        $lines = preg_split('/\r?\n/', $raw);
+
+        if ($lines === false) {
+            return [];
+        }
+
+        foreach ($lines as $line) {
+            $trimmed = trim($line);
+
+            if ($trimmed === '' || str_starts_with($trimmed, 'HTTP/')) {
+                continue;
+            }
+
+            $parts = explode(':', $trimmed, 2);
+
+            if (count($parts) === 2) {
+                $headers[trim($parts[0])][] = trim($parts[1]);
+            }
+        }
+
+        return $headers;
     }
 }
