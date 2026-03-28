@@ -9,11 +9,18 @@ final class TlsOptionsBuilder
     /** @var list<AlpnProtocol>|null */
     private ?array $alpnProtocols = null;
 
+    /** @var list<AlpsProtocol>|null */
+    private ?array $alpsProtocols = null;
+
+    private bool $alpsUseNewCodepoint = false;
+
     private bool $sessionTicket = true;
 
     private ?TlsVersion $minTlsVersion = null;
 
     private ?TlsVersion $maxTlsVersion = null;
+
+    private bool $preSharedKey = false;
 
     private bool $enableEchGrease = false;
 
@@ -27,8 +34,16 @@ final class TlsOptionsBuilder
 
     private ?int $recordSizeLimit = null;
 
+    private bool $pskSkipSessionTicket = false;
+
     /** @var list<KeyShare>|null */
     private ?array $keyShares = null;
+
+    private bool $pskDheKe = true;
+
+    private bool $renegotiation = true;
+
+    private ?string $delegatedCredentials = null;
 
     private ?string $curvesList = null;
 
@@ -36,15 +51,37 @@ final class TlsOptionsBuilder
 
     private ?string $cipherList = null;
 
+    private ?bool $preserveTls13CipherList = null;
+
+    /** @var list<CertificateCompressor>|null */
+    private ?array $certificateCompressors = null;
+
     /** @var list<int>|null */
     private ?array $extensionPermutation = null;
 
     private ?bool $aesHwOverride = null;
 
+    private bool $randomAesHwOverride = false;
+
     /** @param  list<AlpnProtocol>  $protocols */
     public function alpnProtocols(array $protocols): self
     {
         $this->alpnProtocols = $protocols;
+
+        return $this;
+    }
+
+    /** @param  list<AlpsProtocol>  $protocols */
+    public function alpsProtocols(array $protocols): self
+    {
+        $this->alpsProtocols = $protocols;
+
+        return $this;
+    }
+
+    public function alpsUseNewCodepoint(bool $enabled): self
+    {
+        $this->alpsUseNewCodepoint = $enabled;
 
         return $this;
     }
@@ -66,6 +103,13 @@ final class TlsOptionsBuilder
     public function maxTlsVersion(TlsVersion $version): self
     {
         $this->maxTlsVersion = $version;
+
+        return $this;
+    }
+
+    public function preSharedKey(bool $enabled): self
+    {
+        $this->preSharedKey = $enabled;
 
         return $this;
     }
@@ -112,10 +156,38 @@ final class TlsOptionsBuilder
         return $this;
     }
 
+    public function pskSkipSessionTicket(bool $skip): self
+    {
+        $this->pskSkipSessionTicket = $skip;
+
+        return $this;
+    }
+
     /** @param  list<KeyShare>  $keyShares */
     public function keyShares(array $keyShares): self
     {
         $this->keyShares = $keyShares;
+
+        return $this;
+    }
+
+    public function pskDheKe(bool $enabled): self
+    {
+        $this->pskDheKe = $enabled;
+
+        return $this;
+    }
+
+    public function renegotiation(bool $enabled): self
+    {
+        $this->renegotiation = $enabled;
+
+        return $this;
+    }
+
+    public function delegatedCredentials(string $credentials): self
+    {
+        $this->delegatedCredentials = $credentials;
 
         return $this;
     }
@@ -141,6 +213,21 @@ final class TlsOptionsBuilder
         return $this;
     }
 
+    public function preserveTls13CipherList(bool $preserve): self
+    {
+        $this->preserveTls13CipherList = $preserve;
+
+        return $this;
+    }
+
+    /** @param  list<CertificateCompressor>  $compressors */
+    public function certificateCompressors(array $compressors): self
+    {
+        $this->certificateCompressors = $compressors;
+
+        return $this;
+    }
+
     /** @param  list<int>  $permutation */
     public function extensionPermutation(array $permutation): self
     {
@@ -156,25 +243,42 @@ final class TlsOptionsBuilder
         return $this;
     }
 
+    public function randomAesHwOverride(bool $override): self
+    {
+        $this->randomAesHwOverride = $override;
+
+        return $this;
+    }
+
     public function build(): TlsOptions
     {
         return new TlsOptions(
             alpnProtocols: $this->alpnProtocols,
+            alpsProtocols: $this->alpsProtocols,
+            alpsUseNewCodepoint: $this->alpsUseNewCodepoint,
             sessionTicket: $this->sessionTicket,
             minTlsVersion: $this->minTlsVersion,
             maxTlsVersion: $this->maxTlsVersion,
+            preSharedKey: $this->preSharedKey,
             enableEchGrease: $this->enableEchGrease,
             permuteExtensions: $this->permuteExtensions,
             greaseEnabled: $this->greaseEnabled,
             enableOcspStapling: $this->enableOcspStapling,
             enableSignedCertTimestamps: $this->enableSignedCertTimestamps,
             recordSizeLimit: $this->recordSizeLimit,
+            pskSkipSessionTicket: $this->pskSkipSessionTicket,
             keyShares: $this->keyShares,
+            pskDheKe: $this->pskDheKe,
+            renegotiation: $this->renegotiation,
+            delegatedCredentials: $this->delegatedCredentials,
             curvesList: $this->curvesList,
             sigalgsList: $this->sigalgsList,
             cipherList: $this->cipherList,
+            preserveTls13CipherList: $this->preserveTls13CipherList,
+            certificateCompressors: $this->certificateCompressors,
             extensionPermutation: $this->extensionPermutation,
             aesHwOverride: $this->aesHwOverride,
+            randomAesHwOverride: $this->randomAesHwOverride,
         );
     }
 }

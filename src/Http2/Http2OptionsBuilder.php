@@ -20,6 +20,14 @@ final class Http2OptionsBuilder
 
     private ?bool $enablePush = null;
 
+    private ?int $maxHeaderListSize = null;
+
+    private ?int $maxConcurrentStreams = null;
+
+    private ?bool $enableConnectProtocol = null;
+
+    private ?bool $noRfc7540Priorities = null;
+
     private ?PseudoHeaderOrder $headersPseudoOrder = null;
 
     private ?SettingsOrder $settingsOrder = null;
@@ -78,6 +86,34 @@ final class Http2OptionsBuilder
         return $this;
     }
 
+    public function maxHeaderListSize(int $size): self
+    {
+        $this->maxHeaderListSize = $size;
+
+        return $this;
+    }
+
+    public function maxConcurrentStreams(int $streams): self
+    {
+        $this->maxConcurrentStreams = $streams;
+
+        return $this;
+    }
+
+    public function enableConnectProtocol(bool $enabled): self
+    {
+        $this->enableConnectProtocol = $enabled;
+
+        return $this;
+    }
+
+    public function noRfc7540Priorities(bool $disabled): self
+    {
+        $this->noRfc7540Priorities = $disabled;
+
+        return $this;
+    }
+
     public function headersPseudoOrder(PseudoHeaderOrder $order): self
     {
         $this->headersPseudoOrder = $order;
@@ -117,6 +153,10 @@ final class Http2OptionsBuilder
             maxFrameSize: $this->maxFrameSize,
             headerTableSize: $this->headerTableSize,
             enablePush: $this->enablePush,
+            maxHeaderListSize: $this->maxHeaderListSize,
+            maxConcurrentStreams: $this->maxConcurrentStreams,
+            enableConnectProtocol: $this->enableConnectProtocol,
+            noRfc7540Priorities: $this->noRfc7540Priorities,
             headersPseudoOrder: $this->headersPseudoOrder,
             settingsOrder: $this->settingsOrder,
             headersStreamDependency: $this->headersStreamDependency,
