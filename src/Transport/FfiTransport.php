@@ -29,6 +29,15 @@ use Reqxide\Transport\Ffi\FfiWrapper;
  * Response capture uses temp files (CURLOPT_WRITEDATA/CURLOPT_HEADERDATA) since
  * PHP FFI cannot register C function pointer callbacks (CURLOPT_WRITEFUNCTION).
  * Temp files are cleaned up automatically in the finally block.
+ *
+ * @todo NOT PRODUCTION READY — Known issues:
+ *   1. curl_easy_getinfo returns the CURLcode (0=ok), not the actual status code.
+ *      Needs pointer-based extraction: FFI::new("long") + FFI::addr().
+ *   2. CURLOPT_ENCODING (auto-decompression) is not set, so brotli/gzip responses
+ *      come back compressed. CurlTransport handles this with CURLOPT_ENCODING=''.
+ *   3. TLS fingerprint differs from CurlTransport because curl_easy_setopt via FFI
+ *      may encode cipher/curve strings differently than ext/curl.
+ *   Use CurlTransport (default) or ProcessTransport until these are resolved.
  */
 final class FfiTransport implements TransportInterface
 {
