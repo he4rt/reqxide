@@ -20,15 +20,16 @@ final class TransportFactory
             }
         }
 
-        if (extension_loaded('curl')) {
-            return new CurlTransport;
-        }
-
         $binaryPath = ProcessTransport::detectBinaryPath();
         if ($binaryPath !== null) {
             return new ProcessTransport($binaryPath);
         }
 
+        if (extension_loaded('curl')) {
+            return new CurlTransport;
+        }
+
+    
         throw new TransportException('No suitable transport available. Install ext-curl or curl-impersonate.');
     }
 }
