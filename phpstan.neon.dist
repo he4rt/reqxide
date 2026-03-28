@@ -4,3 +4,9 @@ parameters:
         - src
 
     reportUnmatchedIgnoredErrors: true
+
+    ignoreErrors:
+        -
+            identifier: method.notFound
+            path: src/Transport/Ffi/FfiWrapper.php
+            message: '#^Call to an undefined method FFI::#'
