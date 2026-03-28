@@ -29,7 +29,6 @@ final class TransportFactory
             return new CurlTransport;
         }
 
-    
         throw new TransportException('No suitable transport available. Install ext-curl or curl-impersonate.');
     }
 }

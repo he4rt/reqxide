@@ -10,3 +10,7 @@ parameters:
             identifier: method.notFound
             path: src/Transport/Ffi/FfiWrapper.php
             message: '#^Call to an undefined method FFI::#'
+        -
+            identifier: property.onlyWritten
+            path: src/Transport/Ffi/FfiWrapper.php
+            message: '#dlHandle#'
