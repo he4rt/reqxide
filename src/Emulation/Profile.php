@@ -43,4 +43,9 @@ readonly class Profile implements ProfileInterface
     {
         return $this->defaultHeaders;
     }
+
+    public function originalHeaderMap(): ?OriginalHeaderMap
+    {
+        return $this->originalHeaderMap;
+    }
 }

@@ -9,6 +9,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
 use Reqxide\Contract\RedirectPolicyInterface;
+use Reqxide\Exception\RedirectException;
 
 final readonly class RedirectMiddleware implements MiddlewareInterface
 {
@@ -45,6 +46,13 @@ final readonly class RedirectMiddleware implements MiddlewareInterface
             }
 
             if (! $this->policy->shouldFollow($currentRequest, $response, $redirectCount)) {
+                if ($redirectCount >= $this->policy->maxRedirects() && $this->policy->maxRedirects() > 0) {
+                    throw new RedirectException(
+                        $currentRequest,
+                        "Too many redirects ({$redirectCount}). Max: {$this->policy->maxRedirects()}.",
+                    );
+                }
+
                 return $response;
             }
 

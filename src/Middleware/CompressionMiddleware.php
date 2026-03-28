@@ -55,11 +55,19 @@ final readonly class CompressionMiddleware implements MiddlewareInterface
 
     private function decompress(string $data, string $encoding): ?string
     {
+        if ($data === '') {
+            return null;
+        }
+
         return match ($encoding) {
-            'gzip' => @gzdecode($data) ?: null,
-            'deflate' => @gzinflate($data) ?: null,
-            'br' => function_exists('brotli_uncompress') ? (@brotli_uncompress($data) ?: null) : null,
-            'zstd' => function_exists('zstd_uncompress') ? (@zstd_uncompress($data) ?: null) : null,
+            'gzip' => ($result = gzdecode($data)) === false ? null : $result,
+            'deflate' => ($result = gzinflate($data)) === false ? null : $result,
+            'br' => function_exists('brotli_uncompress')
+                ? (($result = brotli_uncompress($data)) === false ? null : $result)
+                : null,
+            'zstd' => function_exists('zstd_uncompress')
+                ? (($result = zstd_uncompress($data)) === false ? null : $result)
+                : null,
             default => null,
         };
     }

@@ -65,7 +65,7 @@ final readonly class RetryPolicy implements RetryPolicyInterface
 
         $isRetryable = $this->classifier instanceof Closure
             ? ($this->classifier)($request, $response, $exception)
-            : $this->defaultClassifier($response, $exception);
+            : $this->defaultClassifier($request, $response, $exception);
 
         if ($isRetryable && $this->budget instanceof RetryBudget) {
             $this->budget->withdraw();
@@ -81,8 +81,13 @@ final readonly class RetryPolicy implements RetryPolicyInterface
         return $this->baseDelayMs * (2 ** $attempt);
     }
 
-    private function defaultClassifier(?ResponseInterface $response, ?\Throwable $exception): bool
+    private function defaultClassifier(RequestInterface $request, ?ResponseInterface $response, ?\Throwable $exception): bool
     {
+        // Only retry idempotent methods by default (RFC 7231 §4.2.2)
+        if (! in_array($request->getMethod(), ['GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS'], true)) {
+            return false;
+        }
+
         if ($exception instanceof \Throwable) {
             return true;
         }

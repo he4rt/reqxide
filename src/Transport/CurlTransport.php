@@ -82,6 +82,8 @@ final class CurlTransport implements TransportInterface
             /** @var array<string, list<string>> $responseHeaders */
             return new Response($statusCode, $responseHeaders, $responseBody);
         } finally {
+            // CurlHandle auto-closes on destruction (PHP 8.0+)
+            unset($ch);
         }
     }
 

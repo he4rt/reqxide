@@ -22,8 +22,75 @@ use Reqxide\Tls\TlsOptions;
 use Reqxide\Tls\TlsVersion;
 use Reqxide\Transport\Ffi\FfiWrapper;
 
+/**
+ * FFI transport using libcurl-impersonate for full TLS/HTTP2 fingerprint control.
+ *
+ * @todo Response body and header capture is not yet implemented. PHP FFI does not
+ *       natively support C function pointer callbacks (CURLOPT_WRITEFUNCTION),
+ *       requiring either a temp-file approach or a custom C shim. Use CurlTransport
+ *       as the production transport until this is resolved.
+ */
 final class FfiTransport implements TransportInterface
 {
+    // Standard CURLOPT constants
+    private const CURLOPT_URL = 10002;
+
+    private const CURLOPT_CUSTOMREQUEST = 10036;
+
+    private const CURLOPT_POSTFIELDS = 10015;
+
+    private const CURLOPT_POSTFIELDSIZE = 60;
+
+    private const CURLOPT_HTTPHEADER = 10023;
+
+    private const CURLOPT_FOLLOWLOCATION = 52;
+
+    private const CURLOPT_TIMEOUT_MS = 155;
+
+    private const CURLOPT_CONNECTTIMEOUT_MS = 156;
+
+    private const CURLOPT_SSL_VERIFYPEER = 64;
+
+    private const CURLOPT_SSL_VERIFYHOST = 81;
+
+    private const CURLOPT_PROXY = 10004;
+
+    private const CURLOPT_PROXYTYPE = 101;
+
+    private const CURLOPT_PROXYUSERPWD = 10006;
+
+    private const CURLOPT_CAINFO = 10065;
+
+    private const CURLOPT_SSLVERSION = 32;
+
+    private const CURLOPT_HTTP_VERSION = 84;
+
+    private const CURLOPT_SSL_CIPHER_LIST = 10083;
+
+    // curl-impersonate specific options
+    private const CURLOPT_SSL_EC_CURVES = 10306;
+
+    private const CURLOPT_SSL_SIG_HASH_ALGS = 10307;
+
+    private const CURLOPT_SSL_ENABLE_TICKET = 313;
+
+    private const CURLOPT_TLS_GREASE = 314;
+
+    private const CURLOPT_TLS_PERMUTE_EXTENSIONS = 315;
+
+    private const CURLOPT_SSL_ECH = 10316;
+
+    private const CURLOPT_HTTP2_PSEUDO_HEADERS_ORDER = 10318;
+
+    private const CURLOPT_HTTP2_SETTINGS = 10319;
+
+    private const CURLOPT_HTTP2_WINDOW_UPDATE = 320;
+
+    // Info and version constants
+    private const CURLINFO_RESPONSE_CODE = 2097154;
+
+    private const CURL_HTTP_VERSION_2_0 = 3;
+
     private readonly FfiWrapper $wrapper;
 
     public function __construct(
@@ -52,7 +119,7 @@ final class FfiTransport implements TransportInterface
             $this->applyTransportOptions($handle, $options);
 
             // Disable redirect following (middleware handles it)
-            $this->wrapper->easySetopt($handle, 52, 0); // CURLOPT_FOLLOWLOCATION
+            $this->wrapper->easySetopt($handle, self::CURLOPT_FOLLOWLOCATION, 0); // CURLOPT_FOLLOWLOCATION
 
             $result = $this->wrapper->easyPerform($handle);
 
@@ -65,7 +132,7 @@ final class FfiTransport implements TransportInterface
             }
 
             // Get status code via CURLINFO_RESPONSE_CODE
-            $statusCode = $this->wrapper->easyGetinfo($handle, 2097154);
+            $statusCode = $this->wrapper->easyGetinfo($handle, self::CURLINFO_RESPONSE_CODE);
 
             return new Response($statusCode, [], '');
         } finally {
@@ -129,20 +196,20 @@ final class FfiTransport implements TransportInterface
         $url = (string) $request->getUri();
 
         if ($url !== '') {
-            $this->wrapper->easySetopt($handle, 10002, $url); // CURLOPT_URL
+            $this->wrapper->easySetopt($handle, self::CURLOPT_URL, $url); // CURLOPT_URL
         }
 
         $method = $request->getMethod();
 
         if ($method !== '') {
-            $this->wrapper->easySetopt($handle, 10036, $method); // CURLOPT_CUSTOMREQUEST
+            $this->wrapper->easySetopt($handle, self::CURLOPT_CUSTOMREQUEST, $method); // CURLOPT_CUSTOMREQUEST
         }
 
         $body = (string) $request->getBody();
 
         if ($body !== '') {
-            $this->wrapper->easySetopt($handle, 10015, $body); // CURLOPT_POSTFIELDS
-            $this->wrapper->easySetopt($handle, 60, strlen($body)); // CURLOPT_POSTFIELDSIZE
+            $this->wrapper->easySetopt($handle, self::CURLOPT_POSTFIELDS, $body); // CURLOPT_POSTFIELDS
+            $this->wrapper->easySetopt($handle, self::CURLOPT_POSTFIELDSIZE, strlen($body)); // CURLOPT_POSTFIELDSIZE
         }
     }
 
@@ -153,27 +220,27 @@ final class FfiTransport implements TransportInterface
         }
 
         if ($tls->cipherList !== null && $tls->cipherList !== '') {
-            $this->wrapper->easySetopt($handle, 10083, $tls->cipherList); // CURLOPT_SSL_CIPHER_LIST
+            $this->wrapper->easySetopt($handle, self::CURLOPT_SSL_CIPHER_LIST, $tls->cipherList); // CURLOPT_SSL_CIPHER_LIST
         }
 
         if ($tls->curvesList !== null && $tls->curvesList !== '') {
-            $this->wrapper->easySetopt($handle, 10306, $tls->curvesList); // CURLOPT_SSL_EC_CURVES
+            $this->wrapper->easySetopt($handle, self::CURLOPT_SSL_EC_CURVES, $tls->curvesList); // CURLOPT_SSL_EC_CURVES
         }
 
         if ($tls->sigalgsList !== null && $tls->sigalgsList !== '') {
-            $this->wrapper->easySetopt($handle, 10307, $tls->sigalgsList); // CURLOPT_SSL_SIG_HASH_ALGS
+            $this->wrapper->easySetopt($handle, self::CURLOPT_SSL_SIG_HASH_ALGS, $tls->sigalgsList); // CURLOPT_SSL_SIG_HASH_ALGS
         }
 
         $sslVersion = $this->mapTlsVersion($tls->minTlsVersion, $tls->maxTlsVersion);
 
         if ($sslVersion !== null) {
-            $this->wrapper->easySetopt($handle, 32, $sslVersion); // CURLOPT_SSLVERSION
+            $this->wrapper->easySetopt($handle, self::CURLOPT_SSLVERSION, $sslVersion); // CURLOPT_SSLVERSION
         }
 
         if ($tls->alpnProtocols !== null) {
             foreach ($tls->alpnProtocols as $proto) {
                 if ($proto === AlpnProtocol::Http2) {
-                    $this->wrapper->easySetopt($handle, 84, 3); // CURL_HTTP_VERSION_2_0
+                    $this->wrapper->easySetopt($handle, self::CURLOPT_HTTP_VERSION, self::CURL_HTTP_VERSION_2_0); // CURL_HTTP_VERSION_2_0
 
                     break;
                 }
@@ -182,18 +249,18 @@ final class FfiTransport implements TransportInterface
 
         // curl_impersonate-specific TLS options
         if ($tls->greaseEnabled !== null) {
-            $this->wrapper->easySetopt($handle, 314, $tls->greaseEnabled ? 1 : 0); // CURLOPT_TLS_GREASE
+            $this->wrapper->easySetopt($handle, self::CURLOPT_TLS_GREASE, $tls->greaseEnabled ? 1 : 0); // CURLOPT_TLS_GREASE
         }
 
         if ($tls->permuteExtensions !== null) {
-            $this->wrapper->easySetopt($handle, 315, $tls->permuteExtensions ? 1 : 0); // CURLOPT_TLS_PERMUTE_EXTENSIONS
+            $this->wrapper->easySetopt($handle, self::CURLOPT_TLS_PERMUTE_EXTENSIONS, $tls->permuteExtensions ? 1 : 0); // CURLOPT_TLS_PERMUTE_EXTENSIONS
         }
 
         if ($tls->enableEchGrease) {
-            $this->wrapper->easySetopt($handle, 10316, 'GREASE'); // CURLOPT_SSL_ECH
+            $this->wrapper->easySetopt($handle, self::CURLOPT_SSL_ECH, 'GREASE'); // CURLOPT_SSL_ECH
         }
 
-        $this->wrapper->easySetopt($handle, 313, $tls->sessionTicket ? 1 : 0); // CURLOPT_SSL_ENABLE_TICKET
+        $this->wrapper->easySetopt($handle, self::CURLOPT_SSL_ENABLE_TICKET, $tls->sessionTicket ? 1 : 0); // CURLOPT_SSL_ENABLE_TICKET
     }
 
     private function applyHttp2Options(CData $handle, ?Http2Options $http2): void
@@ -203,7 +270,7 @@ final class FfiTransport implements TransportInterface
         }
 
         // Ensure HTTP/2
-        $this->wrapper->easySetopt($handle, 84, 3); // CURL_HTTP_VERSION_2_0
+        $this->wrapper->easySetopt($handle, self::CURLOPT_HTTP_VERSION, self::CURL_HTTP_VERSION_2_0); // CURL_HTTP_VERSION_2_0
 
         // Pseudo header order
         if ($http2->headersPseudoOrder !== null) {
@@ -211,7 +278,7 @@ final class FfiTransport implements TransportInterface
                 static fn ($h): string => $h->value,
                 $http2->headersPseudoOrder->headers,
             ));
-            $this->wrapper->easySetopt($handle, 10318, $order); // CURLOPT_HTTP2_PSEUDO_HEADERS_ORDER
+            $this->wrapper->easySetopt($handle, self::CURLOPT_HTTP2_PSEUDO_HEADERS_ORDER, $order); // CURLOPT_HTTP2_PSEUDO_HEADERS_ORDER
         }
 
         // Settings order and values
@@ -235,13 +302,13 @@ final class FfiTransport implements TransportInterface
             }
 
             if ($settings !== []) {
-                $this->wrapper->easySetopt($handle, 10319, implode(',', $settings)); // CURLOPT_HTTP2_SETTINGS
+                $this->wrapper->easySetopt($handle, self::CURLOPT_HTTP2_SETTINGS, implode(',', $settings)); // CURLOPT_HTTP2_SETTINGS
             }
         }
 
         // Connection window update
         if ($http2->initialConnWindowSize !== 65535) {
-            $this->wrapper->easySetopt($handle, 320, $http2->initialConnWindowSize); // CURLOPT_HTTP2_WINDOW_UPDATE
+            $this->wrapper->easySetopt($handle, self::CURLOPT_HTTP2_WINDOW_UPDATE, $http2->initialConnWindowSize); // CURLOPT_HTTP2_WINDOW_UPDATE
         }
     }
 
@@ -269,7 +336,7 @@ final class FfiTransport implements TransportInterface
             $list = $this->wrapper->slistAppend($list, $name.': '.$value);
         }
 
-        $this->wrapper->easySetopt($handle, 10023, $list); // CURLOPT_HTTPHEADER
+        $this->wrapper->easySetopt($handle, self::CURLOPT_HTTPHEADER, $list); // CURLOPT_HTTPHEADER
 
         return $list;
     }
@@ -302,24 +369,24 @@ final class FfiTransport implements TransportInterface
 
     private function applyTransportOptions(CData $handle, TransportOptions $options): void
     {
-        $this->wrapper->easySetopt($handle, 155, $options->timeoutMs); // CURLOPT_TIMEOUT_MS
-        $this->wrapper->easySetopt($handle, 156, $options->connectTimeoutMs); // CURLOPT_CONNECTTIMEOUT_MS
+        $this->wrapper->easySetopt($handle, self::CURLOPT_TIMEOUT_MS, $options->timeoutMs); // CURLOPT_TIMEOUT_MS
+        $this->wrapper->easySetopt($handle, self::CURLOPT_CONNECTTIMEOUT_MS, $options->connectTimeoutMs); // CURLOPT_CONNECTTIMEOUT_MS
 
         if ($options->verifySsl) {
-            $this->wrapper->easySetopt($handle, 64, 1); // CURLOPT_SSL_VERIFYPEER
-            $this->wrapper->easySetopt($handle, 81, 2); // CURLOPT_SSL_VERIFYHOST
+            $this->wrapper->easySetopt($handle, self::CURLOPT_SSL_VERIFYPEER, 1); // CURLOPT_SSL_VERIFYPEER
+            $this->wrapper->easySetopt($handle, self::CURLOPT_SSL_VERIFYHOST, 2); // CURLOPT_SSL_VERIFYHOST
         } else {
-            $this->wrapper->easySetopt($handle, 64, 0); // CURLOPT_SSL_VERIFYPEER
-            $this->wrapper->easySetopt($handle, 81, 0); // CURLOPT_SSL_VERIFYHOST
+            $this->wrapper->easySetopt($handle, self::CURLOPT_SSL_VERIFYPEER, 0); // CURLOPT_SSL_VERIFYPEER
+            $this->wrapper->easySetopt($handle, self::CURLOPT_SSL_VERIFYHOST, 0); // CURLOPT_SSL_VERIFYHOST
         }
 
         if ($options->caBundle !== null && $options->caBundle !== '') {
-            $this->wrapper->easySetopt($handle, 10065, $options->caBundle); // CURLOPT_CAINFO
+            $this->wrapper->easySetopt($handle, self::CURLOPT_CAINFO, $options->caBundle); // CURLOPT_CAINFO
         }
 
         if ($options->proxy instanceof Proxy) {
-            $this->wrapper->easySetopt($handle, 10004, $options->proxy->toUrl()); // CURLOPT_PROXY
-            $this->wrapper->easySetopt($handle, 101, match ($options->proxy->scheme) {
+            $this->wrapper->easySetopt($handle, self::CURLOPT_PROXY, $options->proxy->toUrl()); // CURLOPT_PROXY
+            $this->wrapper->easySetopt($handle, self::CURLOPT_PROXYTYPE, match ($options->proxy->scheme) {
                 ProxyScheme::Http => 0,    // CURLPROXY_HTTP
                 ProxyScheme::Https => 2,   // CURLPROXY_HTTPS
                 ProxyScheme::Socks4 => 4,  // CURLPROXY_SOCKS4
@@ -333,7 +400,7 @@ final class FfiTransport implements TransportInterface
                     $auth .= ':'.$options->proxy->password;
                 }
 
-                $this->wrapper->easySetopt($handle, 10006, $auth); // CURLOPT_PROXYUSERPWD
+                $this->wrapper->easySetopt($handle, self::CURLOPT_PROXYUSERPWD, $auth); // CURLOPT_PROXYUSERPWD
             }
         }
     }

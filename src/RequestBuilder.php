@@ -85,7 +85,7 @@ final class RequestBuilder
     /** @param array<string, string> $params */
     public function query(array $params): self
     {
-        $this->queryParams = $params;
+        $this->queryParams = array_merge($this->queryParams, $params);
 
         return $this;
     }
