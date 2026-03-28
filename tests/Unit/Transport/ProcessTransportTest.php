@@ -266,3 +266,63 @@ it('parses HTTP/2 status line', function (): void {
         unlink($scriptPath);
     }
 });
+
+it('parses response with proxy CONNECT tunnel headers', function (): void {
+    // Simulates curl output through a proxy: CONNECT headers + actual HTTP/2 response
+    $scriptPath = sys_get_temp_dir().'/reqxide_test_curl_proxy_connect_'.getmypid().'.sh';
+    $output = implode("\r\n", [
+        'HTTP/1.1 200 Connection established',
+        '',
+        'HTTP/2 200',
+        'content-type: application/json',
+        'x-custom: value',
+        '',
+        '{"data":"hello"}',
+    ]);
+    file_put_contents($scriptPath, "#!/bin/sh\nprintf '".addcslashes($output, "'")."'\n");
+    chmod($scriptPath, 0755);
+
+    try {
+        $transport = new ProcessTransport($scriptPath);
+        $request = new Request('GET', 'https://api.example.com/data');
+        $profile = new Profile;
+        $options = new TransportOptions;
+
+        $response = $transport->send($request, $profile, $options);
+
+        expect($response->getStatusCode())->toBe(200)
+            ->and($response->getHeaderLine('content-type'))->toBe('application/json')
+            ->and($response->getHeaderLine('x-custom'))->toBe('value')
+            ->and((string) $response->getBody())->toBe('{"data":"hello"}');
+    } finally {
+        unlink($scriptPath);
+    }
+});
+
+it('parses response with proxy CONNECT tunnel and non-200 status', function (): void {
+    $scriptPath = sys_get_temp_dir().'/reqxide_test_curl_proxy_403_'.getmypid().'.sh';
+    $output = implode("\r\n", [
+        'HTTP/1.1 200 Connection established',
+        '',
+        'HTTP/2 403',
+        'content-type: application/json',
+        '',
+        '{"error":"forbidden"}',
+    ]);
+    file_put_contents($scriptPath, "#!/bin/sh\nprintf '".addcslashes($output, "'")."'\n");
+    chmod($scriptPath, 0755);
+
+    try {
+        $transport = new ProcessTransport($scriptPath);
+        $request = new Request('GET', 'https://api.example.com/blocked');
+        $profile = new Profile;
+        $options = new TransportOptions;
+
+        $response = $transport->send($request, $profile, $options);
+
+        expect($response->getStatusCode())->toBe(403)
+            ->and((string) $response->getBody())->toBe('{"error":"forbidden"}');
+    } finally {
+        unlink($scriptPath);
+    }
+});

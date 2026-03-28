@@ -153,25 +153,42 @@ final readonly class ProcessTransport implements TransportInterface
             $args[] = $options->proxy->toUrl();
         }
 
+        // Let curl handle decompression of gzip/br/zstd responses
+        $args[] = '--compressed';
+
         return $args;
     }
 
+    /**
+     * Parse curl output into a PSR-7 response.
+     *
+     * Handles multiple header blocks (e.g. proxy CONNECT response followed
+     * by the actual HTTP/2 response) by finding the last HTTP status line.
+     */
     private function parseResponse(string $raw): ResponseInterface
     {
-        $headerEnd = strpos($raw, "\r\n\r\n");
-        if ($headerEnd === false) {
-            $headerEnd = strpos($raw, "\n\n");
-            if ($headerEnd === false) {
+        // Find the last header/body separator — with proxies, curl outputs
+        // multiple header blocks (CONNECT tunnel + actual response).
+        $separator = "\r\n\r\n";
+        $lastHeaderEnd = strrpos($raw, $separator);
+
+        if ($lastHeaderEnd === false) {
+            $separator = "\n\n";
+            $lastHeaderEnd = strrpos($raw, $separator);
+
+            if ($lastHeaderEnd === false) {
                 return new Response(200, [], $raw);
             }
-
-            $separator = "\n\n";
-        } else {
-            $separator = "\r\n\r\n";
         }
 
-        $headerSection = substr($raw, 0, $headerEnd);
-        $body = substr($raw, $headerEnd + strlen($separator));
+        $headerSection = substr($raw, 0, $lastHeaderEnd);
+        $body = substr($raw, $lastHeaderEnd + strlen($separator));
+
+        // Find the last HTTP status line to skip proxy CONNECT headers
+        $lastHttpPos = strrpos($headerSection, 'HTTP/');
+        if ($lastHttpPos !== false && $lastHttpPos > 0) {
+            $headerSection = substr($headerSection, $lastHttpPos);
+        }
 
         $lines = preg_split('/\r?\n/', $headerSection);
 
