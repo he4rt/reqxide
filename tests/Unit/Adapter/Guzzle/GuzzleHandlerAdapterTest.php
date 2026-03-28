@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use GuzzleHttp\Promise\PromiseInterface;
 use Nyholm\Psr7\Request;
 use Nyholm\Psr7\Response;
 use Psr\Http\Message\RequestInterface;
@@ -63,7 +64,19 @@ it('is callable', function (): void {
     expect($adapter)->toBeCallable();
 });
 
-it('sends request via internal client and returns response', function (): void {
+it('returns a PromiseInterface', function (): void {
+    $transport = createRecordingTransport();
+    $builder = Client::builder()->transport($transport);
+
+    $adapter = new GuzzleHandlerAdapter(Browser::Chrome131, $builder);
+
+    $request = new Request('GET', 'https://example.com/api');
+    $promise = $adapter($request);
+
+    expect($promise)->toBeInstanceOf(PromiseInterface::class);
+});
+
+it('resolves promise with the response', function (): void {
     $expectedResponse = new Response(201, ['X-Custom' => 'header'], 'Created');
     $transport = createRecordingTransport($expectedResponse);
     $builder = Client::builder()->transport($transport);
@@ -71,7 +84,8 @@ it('sends request via internal client and returns response', function (): void {
     $adapter = new GuzzleHandlerAdapter(Browser::Chrome131, $builder);
 
     $request = new Request('GET', 'https://example.com/api');
-    $response = $adapter($request);
+    $promise = $adapter($request);
+    $response = $promise->wait();
 
     expect($response)->toBe($expectedResponse)
         ->and($response->getStatusCode())->toBe(201)
@@ -87,21 +101,47 @@ it('passes request options without error', function (): void {
     $adapter = new GuzzleHandlerAdapter(Browser::Chrome131, $builder);
 
     $request = new Request('POST', 'https://example.com');
-    $response = $adapter($request, ['timeout' => 5, 'verify' => false]);
+    $promise = $adapter($request, ['timeout' => 5, 'verify' => false]);
 
-    expect($response->getStatusCode())->toBe(200);
+    expect($promise->wait()->getStatusCode())->toBe(200);
+});
+
+it('returns rejected promise on exception', function (): void {
+    $transport = new class implements TransportInterface
+    {
+        public function send(RequestInterface $request, Profile $profile, TransportOptions $options): ResponseInterface
+        {
+            throw new \RuntimeException('Connection failed');
+        }
+
+        public function supportsFingerprinting(): bool
+        {
+            return false;
+        }
+
+        public function supportsHttp2Configuration(): bool
+        {
+            return false;
+        }
+    };
+
+    $builder = Client::builder()->transport($transport);
+    $adapter = new GuzzleHandlerAdapter(Browser::Chrome131, $builder);
+
+    $request = new Request('GET', 'https://example.com');
+    $promise = $adapter($request);
+
+    expect($promise->getState())->toBe('rejected');
 });
 
 it('uses default builder when none is provided', function (): void {
-    // This test verifies the constructor doesn't throw when no builder is given.
-    // It will use TransportFactory::create() internally (which needs ext-curl).
     $transport = createRecordingTransport();
     $builder = Client::builder()->transport($transport);
 
     $adapter = new GuzzleHandlerAdapter(Browser::Firefox136, $builder);
 
     $request = new Request('GET', 'https://example.com');
-    $response = $adapter($request);
+    $response = $adapter($request)->wait();
 
     expect($response->getStatusCode())->toBe(200);
 });

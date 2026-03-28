@@ -17,7 +17,12 @@
         "psr/http-factory": "^1.0",
         "nyholm/psr7": "^1.8"
     },
+    "suggest": {
+        "guzzlehttp/guzzle": "Required for GuzzleHandlerAdapter (^7.0)",
+        "guzzlehttp/promises": "Required for GuzzleHandlerAdapter (^2.0)"
+    },
     "require-dev": {
+        "guzzlehttp/guzzle": "^7.0",
         "laravel/pint": "^1.29.0",
         "pestphp/pest": "^5.0.0",
         "pestphp/pest-plugin-type-coverage": "^5.0.0",

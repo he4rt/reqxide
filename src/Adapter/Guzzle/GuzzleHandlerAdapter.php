@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Reqxide\Adapter\Guzzle;
 
+use GuzzleHttp\Promise\Create;
+use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
 use Reqxide\Client;
 use Reqxide\ClientBuilder;
 use Reqxide\Emulation\Browser;
@@ -14,6 +15,7 @@ use Reqxide\Emulation\Browser;
  * Guzzle handler adapter.
  *
  * Wraps a reqxide Client as a callable that Guzzle can use as a handler.
+ * Returns a PromiseInterface as required by Guzzle's middleware stack.
  *
  * Usage with Guzzle:
  *   $handler = new GuzzleHandlerAdapter(Browser::Chrome131);
@@ -36,8 +38,14 @@ final class GuzzleHandlerAdapter
      *
      * @param  array<string, mixed>  $options  Guzzle request options (timeout, etc.)
      */
-    public function __invoke(RequestInterface $request, array $options = []): ResponseInterface
+    public function __invoke(RequestInterface $request, array $options = []): PromiseInterface
     {
-        return $this->client->sendRequest($request);
+        try {
+            $response = $this->client->sendRequest($request);
+
+            return Create::promiseFor($response);
+        } catch (\Throwable $e) {
+            return Create::rejectionFor($e);
+        }
     }
 }
