@@ -9,7 +9,7 @@ use Reqxide\Contract\CookieStoreInterface;
 
 class CookieJar implements CookieStoreInterface
 {
-    private const string DEFAULT_PATH = '/';
+    private const DEFAULT_PATH = '/';
 
     /** @var array<string, array<string, array<string, Cookie>>> */
     private array $cookies = [];

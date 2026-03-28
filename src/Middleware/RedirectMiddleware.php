@@ -13,7 +13,7 @@ use Reqxide\Contract\RedirectPolicyInterface;
 final readonly class RedirectMiddleware implements MiddlewareInterface
 {
     /** @var list<string> */
-    private const array SENSITIVE_HEADERS = [
+    private const SENSITIVE_HEADERS = [
         'Authorization',
         'Cookie',
         'Cookie2',

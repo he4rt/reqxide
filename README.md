@@ -12,7 +12,7 @@ Reqxide brings TLS and HTTP/2 fingerprinting to PHP. It emulates real browser fi
 
 Ported from Rust's [wreq](https://github.com/nickel-org/wreq).
 
-> **Requires [PHP 8.5+](https://php.net/releases/)**
+> **Requires [PHP 8.4+](https://php.net/releases/)**
 
 ## Why?
 
