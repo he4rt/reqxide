@@ -13,8 +13,7 @@ use Reqxide\Exception\RedirectException;
 
 final readonly class RedirectMiddleware implements MiddlewareInterface
 {
-    /** @var list<string> */
-    private const SENSITIVE_HEADERS = [
+    private const array SENSITIVE_HEADERS = [
         'Authorization',
         'Cookie',
         'Cookie2',

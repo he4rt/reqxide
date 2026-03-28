@@ -14,6 +14,7 @@ use Reqxide\Exception\FfiException;
 use Reqxide\Exception\NetworkException;
 use Reqxide\Http1\OriginalHeaderMap;
 use Reqxide\Http2\Http2Options;
+use Reqxide\Http2\PseudoHeader;
 use Reqxide\Http2\SettingId;
 use Reqxide\Proxy\Proxy;
 use Reqxide\Proxy\ProxyScheme;
@@ -33,63 +34,63 @@ use Reqxide\Transport\Ffi\FfiWrapper;
 final class FfiTransport implements TransportInterface
 {
     // Standard CURLOPT constants
-    private const CURLOPT_URL = 10002;
+    private const int CURLOPT_URL = 10002;
 
-    private const CURLOPT_CUSTOMREQUEST = 10036;
+    private const int CURLOPT_CUSTOMREQUEST = 10036;
 
-    private const CURLOPT_POSTFIELDS = 10015;
+    private const int CURLOPT_POSTFIELDS = 10015;
 
-    private const CURLOPT_POSTFIELDSIZE = 60;
+    private const int CURLOPT_POSTFIELDSIZE = 60;
 
-    private const CURLOPT_HTTPHEADER = 10023;
+    private const int CURLOPT_HTTPHEADER = 10023;
 
-    private const CURLOPT_FOLLOWLOCATION = 52;
+    private const int CURLOPT_FOLLOWLOCATION = 52;
 
-    private const CURLOPT_TIMEOUT_MS = 155;
+    private const int CURLOPT_TIMEOUT_MS = 155;
 
-    private const CURLOPT_CONNECTTIMEOUT_MS = 156;
+    private const int CURLOPT_CONNECTTIMEOUT_MS = 156;
 
-    private const CURLOPT_SSL_VERIFYPEER = 64;
+    private const int CURLOPT_SSL_VERIFYPEER = 64;
 
-    private const CURLOPT_SSL_VERIFYHOST = 81;
+    private const int CURLOPT_SSL_VERIFYHOST = 81;
 
-    private const CURLOPT_PROXY = 10004;
+    private const int CURLOPT_PROXY = 10004;
 
-    private const CURLOPT_PROXYTYPE = 101;
+    private const int CURLOPT_PROXYTYPE = 101;
 
-    private const CURLOPT_PROXYUSERPWD = 10006;
+    private const int CURLOPT_PROXYUSERPWD = 10006;
 
-    private const CURLOPT_CAINFO = 10065;
+    private const int CURLOPT_CAINFO = 10065;
 
-    private const CURLOPT_SSLVERSION = 32;
+    private const int CURLOPT_SSLVERSION = 32;
 
-    private const CURLOPT_HTTP_VERSION = 84;
+    private const int CURLOPT_HTTP_VERSION = 84;
 
-    private const CURLOPT_SSL_CIPHER_LIST = 10083;
+    private const int CURLOPT_SSL_CIPHER_LIST = 10083;
 
     // curl-impersonate specific options
-    private const CURLOPT_SSL_EC_CURVES = 10306;
+    private const int CURLOPT_SSL_EC_CURVES = 10306;
 
-    private const CURLOPT_SSL_SIG_HASH_ALGS = 10307;
+    private const int CURLOPT_SSL_SIG_HASH_ALGS = 10307;
 
-    private const CURLOPT_SSL_ENABLE_TICKET = 313;
+    private const int CURLOPT_SSL_ENABLE_TICKET = 313;
 
-    private const CURLOPT_TLS_GREASE = 314;
+    private const int CURLOPT_TLS_GREASE = 314;
 
-    private const CURLOPT_TLS_PERMUTE_EXTENSIONS = 315;
+    private const int CURLOPT_TLS_PERMUTE_EXTENSIONS = 315;
 
-    private const CURLOPT_SSL_ECH = 10316;
+    private const int CURLOPT_SSL_ECH = 10316;
 
-    private const CURLOPT_HTTP2_PSEUDO_HEADERS_ORDER = 10318;
+    private const int CURLOPT_HTTP2_PSEUDO_HEADERS_ORDER = 10318;
 
-    private const CURLOPT_HTTP2_SETTINGS = 10319;
+    private const int CURLOPT_HTTP2_SETTINGS = 10319;
 
-    private const CURLOPT_HTTP2_WINDOW_UPDATE = 320;
+    private const int CURLOPT_HTTP2_WINDOW_UPDATE = 320;
 
     // Info and version constants
-    private const CURLINFO_RESPONSE_CODE = 2097154;
+    private const int CURLINFO_RESPONSE_CODE = 2097154;
 
-    private const CURL_HTTP_VERSION_2_0 = 3;
+    private const int CURL_HTTP_VERSION_2_0 = 3;
 
     private readonly FfiWrapper $wrapper;
 
@@ -275,7 +276,7 @@ final class FfiTransport implements TransportInterface
         // Pseudo header order
         if ($http2->headersPseudoOrder !== null) {
             $order = implode(',', array_map(
-                static fn ($h): string => $h->value,
+                static fn (PseudoHeader $h): string => $h->value,
                 $http2->headersPseudoOrder->headers,
             ));
             $this->wrapper->easySetopt($handle, self::CURLOPT_HTTP2_PSEUDO_HEADERS_ORDER, $order); // CURLOPT_HTTP2_PSEUDO_HEADERS_ORDER
