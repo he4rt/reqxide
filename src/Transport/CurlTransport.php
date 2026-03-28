@@ -66,6 +66,11 @@ final class CurlTransport implements TransportInterface
             // Disable curl's built-in redirect handling (middleware handles this)
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
 
+            // Enable curl's built-in decompression (gzip, deflate, br, zstd)
+            // The Accept-Encoding header from the profile is sent for fingerprinting,
+            // but curl handles the actual decompression transparently.
+            curl_setopt($ch, CURLOPT_ENCODING, '');
+
             $result = curl_exec($ch);
 
             if ($result === false) {
