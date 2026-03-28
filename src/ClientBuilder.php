@@ -8,10 +8,15 @@ use Reqxide\Contract\CookieStoreInterface;
 use Reqxide\Contract\RedirectPolicyInterface;
 use Reqxide\Contract\RetryPolicyInterface;
 use Reqxide\Contract\TransportInterface;
+use Reqxide\Cookie\CookieJar;
 use Reqxide\Emulation\Browser;
 use Reqxide\Emulation\Profile;
+use Reqxide\Middleware\CompressionMiddleware;
+use Reqxide\Middleware\CookieMiddleware;
 use Reqxide\Middleware\MiddlewareInterface;
 use Reqxide\Middleware\MiddlewarePipeline;
+use Reqxide\Middleware\RedirectMiddleware;
+use Reqxide\Middleware\RetryMiddleware;
 use Reqxide\Proxy\Proxy;
 use Reqxide\Transport\TransportFactory;
 use Reqxide\Transport\TransportOptions;
@@ -172,20 +177,21 @@ final class ClientBuilder
     {
         $middlewares = [];
 
-        // Phase 5: Cookie middleware
         if ($this->cookieStoreEnabled || $this->cookieJar instanceof CookieStoreInterface) {
-            // Will create CookieMiddleware($this->cookieJar ?? new CookieJar())
+            $middlewares[] = new CookieMiddleware(
+                $this->cookieJar ?? new CookieJar,
+            );
         }
 
-        // Phase 5: Redirect middleware
         if ($this->redirectPolicy instanceof RedirectPolicyInterface) {
-            // Will create RedirectMiddleware($this->redirectPolicy)
+            $middlewares[] = new RedirectMiddleware($this->redirectPolicy);
         }
 
-        // Phase 5: Retry middleware
         if ($this->retryPolicy instanceof RetryPolicyInterface) {
-            // Will create RetryMiddleware($this->retryPolicy)
+            $middlewares[] = new RetryMiddleware($this->retryPolicy);
         }
+
+        $middlewares[] = new CompressionMiddleware;
 
         return $middlewares;
     }

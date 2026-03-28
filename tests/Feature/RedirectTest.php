@@ -50,13 +50,10 @@ it('follows redirects when redirect policy is configured', function (): void {
         ->timeout(10)
         ->build();
 
-    // httpbin.org/redirect/3 redirects 3 times then returns 200.
-    // Note: Once Phase 5 wires RedirectMiddleware, this will follow
-    // redirects and return 200. Until then, we get the first 302.
+    // httpbin.org/redirect/3 redirects 3 times then returns 200
     $response = $client->get('https://httpbin.org/redirect/3')->send();
 
-    // Phase 5 will change this to 200 once middleware is wired
-    expect($response->getStatusCode())->toBeIn([200, 302]);
+    expect($response->getStatusCode())->toBe(200);
 })->group('integration');
 
 it('stops following redirects when policy is none', function (): void {
