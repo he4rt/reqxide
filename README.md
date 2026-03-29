@@ -8,6 +8,8 @@ PHP TLS/HTTP fingerprinting library for browser emulation.
 
 ---
 
+> **Warning:** This package is under active development and not yet stable. The API may change between minor versions. Use in production at your own risk.
+
 Reqxide brings TLS and HTTP/2 fingerprinting to PHP. It emulates real browser fingerprints (Chrome, Firefox, Safari, Edge, OkHttp) so your HTTP requests look identical to traffic from actual browsers. Built on top of `curl_impersonate`, it provides a PSR-18 compatible client with transparent browser emulation.
 
 Ported from Rust's [wreq](https://github.com/nickel-org/wreq).
