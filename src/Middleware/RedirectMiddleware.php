@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Reqxide\Middleware;
 
+use Nyholm\Psr7\Stream;
 use Nyholm\Psr7\Uri;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -60,10 +61,21 @@ final readonly class RedirectMiddleware implements MiddlewareInterface
 
             $newUri = $this->resolveUri($currentRequest->getUri(), $location);
 
-            $newMethod = $this->determineMethod($statusCode, $currentRequest->getMethod());
+            $oldMethod = $currentRequest->getMethod();
+            $newMethod = $this->determineMethod($statusCode, $oldMethod);
             $currentRequest = $currentRequest
                 ->withUri($newUri)
                 ->withMethod($newMethod);
+
+            // Strip body when method changes to GET (303, or 301/302 POST→GET)
+            // RFC 7231 §6.4.4: the original body MUST NOT be sent on the redirected
+            // request when the method changes — prevents leaking POST data.
+            if ($newMethod !== $oldMethod) {
+                $currentRequest = $currentRequest
+                    ->withBody(Stream::create(''))
+                    ->withoutHeader('Content-Type')
+                    ->withoutHeader('Content-Length');
+            }
 
             if ($this->isCrossOrigin($originalUri, $newUri)) {
                 foreach (self::SENSITIVE_HEADERS as $header) {

@@ -40,19 +40,33 @@ final class CurlTransport implements TransportInterface
             $responseBody = '';
 
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
-            curl_setopt($ch, CURLOPT_HEADERFUNCTION, static function (CurlHandle $ch, string $header) use (&$responseHeaders): int {
+            $lastHeaderName = '';
+            curl_setopt($ch, CURLOPT_HEADERFUNCTION, static function (CurlHandle $ch, string $header) use (&$responseHeaders, &$lastHeaderName): int {
                 $length = strlen($header);
                 $trimmed = trim($header);
 
                 if ($trimmed === '' || str_starts_with($trimmed, 'HTTP/')) {
+                    $lastHeaderName = '';
+
+                    return $length;
+                }
+
+                // Handle folded headers (continuation lines starting with space/tab)
+                if (($header[0] === ' ' || $header[0] === "\t") && $lastHeaderName !== '') {
+                    /** @var array<string, list<string>> $responseHeaders */
+                    $existing = array_pop($responseHeaders[$lastHeaderName]) ?? '';
+                    $responseHeaders[$lastHeaderName][] = $existing.' '.$trimmed;
+
                     return $length;
                 }
 
                 $parts = explode(':', $trimmed, 2);
 
                 if (count($parts) === 2) {
+                    $name = trim($parts[0]);
                     /** @var array<string, list<string>> $responseHeaders */
-                    $responseHeaders[trim($parts[0])][] = trim($parts[1]);
+                    $responseHeaders[$name][] = trim($parts[1]);
+                    $lastHeaderName = $name;
                 }
 
                 return $length;
