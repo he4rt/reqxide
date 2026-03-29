@@ -32,7 +32,7 @@ class RetryBudget
             return true;
         }
 
-        return ($this->retryRequests / $this->totalRequests) < $this->ratio;
+        return ($this->retryRequests / (float) $this->totalRequests) < $this->ratio;
     }
 
     public function reset(): void

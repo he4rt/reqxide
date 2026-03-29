@@ -56,7 +56,7 @@ final readonly class CompressionMiddleware implements MiddlewareInterface
     private function decompress(string $data, string $encoding): ?string
     {
         if ($data === '') {
-            return null;
+            return '';
         }
 
         return match ($encoding) {

@@ -71,7 +71,13 @@ readonly class Proxy
 
     private static function parse(ProxyScheme $scheme, string $address): self
     {
-        $parts = parse_url($address);
+        // Prefix with // so parse_url can detect user:pass@host:port
+        $urlToParse = $address;
+        if (! str_contains($address, '://') && ! str_starts_with($address, '//')) {
+            $urlToParse = '//'.$address;
+        }
+
+        $parts = parse_url($urlToParse);
 
         if ($parts === false) {
             $hostPort = explode(':', $address, 2);

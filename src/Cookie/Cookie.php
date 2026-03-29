@@ -101,7 +101,7 @@ readonly class Cookie
 
     public function isExpired(): bool
     {
-        if ($this->maxAge !== null && $this->maxAge === 0) {
+        if ($this->maxAge !== null && $this->maxAge <= 0) {
             return true;
         }
 

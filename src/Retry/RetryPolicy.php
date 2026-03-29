@@ -78,7 +78,8 @@ final readonly class RetryPolicy implements RetryPolicyInterface
 
     public function delayMs(int $attempt): int
     {
-        return $this->baseDelayMs * (2 ** $attempt);
+        // Cap exponent at 16 to prevent overflow (max delay: base * 65536)
+        return $this->baseDelayMs * (2 ** min($attempt, 16));
     }
 
     private function defaultClassifier(RequestInterface $request, ?ResponseInterface $response, ?\Throwable $exception): bool

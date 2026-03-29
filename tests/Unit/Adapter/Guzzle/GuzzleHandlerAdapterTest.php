@@ -111,7 +111,7 @@ it('returns rejected promise on exception', function (): void {
     {
         public function send(RequestInterface $request, Profile $profile, TransportOptions $options): ResponseInterface
         {
-            throw new \RuntimeException('Connection failed');
+            throw new RuntimeException('Connection failed');
         }
 
         public function supportsFingerprinting(): bool

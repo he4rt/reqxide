@@ -44,8 +44,10 @@ final readonly class RedirectMiddleware implements MiddlewareInterface
                 return $response;
             }
 
+            $redirectCount++;
+
             if (! $this->policy->shouldFollow($currentRequest, $response, $redirectCount)) {
-                if ($redirectCount >= $this->policy->maxRedirects() && $this->policy->maxRedirects() > 0) {
+                if ($redirectCount > $this->policy->maxRedirects() && $this->policy->maxRedirects() > 0) {
                     throw new RedirectException(
                         $currentRequest,
                         "Too many redirects ({$redirectCount}). Max: {$this->policy->maxRedirects()}.",
@@ -54,8 +56,6 @@ final readonly class RedirectMiddleware implements MiddlewareInterface
 
                 return $response;
             }
-
-            $redirectCount++;
             $location = $response->getHeaderLine('Location');
 
             $newUri = $this->resolveUri($currentRequest->getUri(), $location);
@@ -115,6 +115,29 @@ final readonly class RedirectMiddleware implements MiddlewareInterface
         $lastSlash = strrpos($basePath, '/');
         $newPath = ($lastSlash !== false ? substr($basePath, 0, $lastSlash + 1) : '/').$location;
 
-        return $uri->withPath($newPath);
+        return $uri->withPath(self::normalizePath($newPath));
+    }
+
+    /**
+     * Remove dot segments from a path per RFC 3986 §5.2.4.
+     */
+    private static function normalizePath(string $path): string
+    {
+        $segments = explode('/', $path);
+        $result = [];
+
+        foreach ($segments as $segment) {
+            if ($segment === '..') {
+                if ($result !== [] && end($result) !== '') {
+                    array_pop($result);
+                }
+            } elseif ($segment !== '.') {
+                $result[] = $segment;
+            }
+        }
+
+        $normalized = implode('/', $result);
+
+        return str_starts_with($normalized, '/') ? $normalized : '/'.$normalized;
     }
 }
