@@ -22,8 +22,9 @@ final readonly class CompressionMiddleware implements MiddlewareInterface
 
         $response = $next($request);
 
-        if ($response->hasHeader('Content-Encoding')) {
-            $encoding = strtolower($response->getHeaderLine('Content-Encoding'));
+        $encoding = ContentEncoding::tryFrom(strtolower($response->getHeaderLine('Content-Encoding')));
+
+        if ($encoding instanceof ContentEncoding) {
             $body = (string) $response->getBody();
             $decompressed = $this->decompress($body, $encoding);
 
@@ -40,35 +41,38 @@ final readonly class CompressionMiddleware implements MiddlewareInterface
 
     private function supportedEncodings(): string
     {
-        $encodings = ['gzip', 'deflate'];
+        $encodings = [ContentEncoding::Gzip->value, ContentEncoding::Deflate->value];
 
         if (function_exists('brotli_uncompress')) {
-            $encodings[] = 'br';
+            $encodings[] = ContentEncoding::Brotli->value;
         }
 
         if (function_exists('zstd_uncompress')) {
-            $encodings[] = 'zstd';
+            $encodings[] = ContentEncoding::Zstd->value;
         }
 
         return implode(', ', $encodings);
     }
 
-    private function decompress(string $data, string $encoding): ?string
+    private function decompress(string $data, ContentEncoding $encoding): ?string
     {
         if ($data === '') {
             return '';
         }
 
+        if (! $encoding->looksCompressed($data)) {
+            return $data;
+        }
+
         return match ($encoding) {
-            'gzip' => ($result = gzdecode($data)) === false ? null : $result,
-            'deflate' => ($result = gzinflate($data)) === false ? null : $result,
-            'br' => function_exists('brotli_uncompress')
-                ? (($result = brotli_uncompress($data)) === false ? null : $result)
+            ContentEncoding::Gzip => ($result = @gzdecode($data)) === false ? null : $result,
+            ContentEncoding::Deflate => ($result = @gzinflate($data)) === false ? null : $result,
+            ContentEncoding::Brotli => function_exists('brotli_uncompress')
+                ? (($result = @brotli_uncompress($data)) === false ? null : $result)
                 : null,
-            'zstd' => function_exists('zstd_uncompress')
-                ? (($result = zstd_uncompress($data)) === false ? null : $result)
+            ContentEncoding::Zstd => function_exists('zstd_uncompress')
+                ? (($result = @zstd_uncompress($data)) === false ? null : $result)
                 : null,
-            default => null,
         };
     }
 }
