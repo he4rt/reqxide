@@ -29,6 +29,7 @@ readonly class TlsOptions
         public ?int $recordSizeLimit = null,
         public bool $pskSkipSessionTicket = false,
         public ?array $keyShares = null,
+        public ?int $keySharesLimit = null,
         public bool $pskDheKe = true,
         public bool $renegotiation = true,
         public ?string $delegatedCredentials = null,

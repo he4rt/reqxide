@@ -14,9 +14,9 @@ it('returns a Profile with non-null tlsOptions and http2Options for each version
         ->and($profile->tlsOptions)->not->toBeNull()
         ->and($profile->http2Options)->not->toBeNull();
 })->with([
-    ['v18'],
-    ['iPad18'],
-    ['iOS18'],
+    ['v18'], ['iPad18'], ['iOS18'],
+    ['v153'], ['v155'], ['v170'], ['v172iOS'],
+    ['v184'], ['v184iOS'], ['v260'], ['v260iOS'],
 ]);
 
 it('does NOT have ECH GREASE', function (): void {
@@ -25,13 +25,13 @@ it('does NOT have ECH GREASE', function (): void {
     expect($profile->tlsOptions?->enableEchGrease)->toBeFalse();
 });
 
-it('does NOT have GREASE enabled', function (): void {
+it('does NOT have GREASE enabled for wreq profiles', function (): void {
     $profile = Safari::v18();
 
     expect($profile->tlsOptions?->greaseEnabled)->toBeFalse();
 });
 
-it('has pseudo order of Method, Scheme, Path, Authority', function (): void {
+it('has pseudo order of Method, Scheme, Path, Authority for wreq', function (): void {
     $profile = Safari::v18();
 
     expect($profile->http2Options?->headersPseudoOrder?->headers)->toBe([
@@ -64,4 +64,93 @@ it('has non-null originalHeaderMap', function (): void {
     $profile = Safari::v18();
 
     expect($profile->originalHeaderMap)->not->toBeNull();
+});
+
+// Era-specific tests for curl_impersonate profiles
+
+it('15.x uses TLS 1.0 minimum', function (string $method): void {
+    /** @var Profile $profile */
+    $profile = Safari::$method();
+
+    expect($profile->tlsOptions?->minTlsVersion?->value)->toBe('1.0');
+})->with([['v153'], ['v155']]);
+
+it('15.x has GREASE enabled', function (): void {
+    $profile = Safari::v153();
+
+    expect($profile->tlsOptions?->greaseEnabled)->toBeTrue();
+});
+
+it('15.3 has 3DES ciphers', function (): void {
+    $profile = Safari::v153();
+
+    expect($profile->tlsOptions?->cipherList)->toContain('DES-CBC3-SHA');
+});
+
+it('15.x has no session ticket', function (string $method): void {
+    /** @var Profile $profile */
+    $profile = Safari::$method();
+
+    expect($profile->tlsOptions?->sessionTicket)->toBeFalse();
+})->with([['v153'], ['v155']]);
+
+it('17.x uses pseudo mspa', function (string $method): void {
+    /** @var Profile $profile */
+    $profile = Safari::$method();
+
+    expect($profile->http2Options?->headersPseudoOrder?->headers)->toBe([
+        PseudoHeader::Method,
+        PseudoHeader::Scheme,
+        PseudoHeader::Path,
+        PseudoHeader::Authority,
+    ]);
+})->with([['v170'], ['v172iOS']]);
+
+it('18.x+ uses pseudo msap', function (string $method): void {
+    /** @var Profile $profile */
+    $profile = Safari::$method();
+
+    expect($profile->http2Options?->headersPseudoOrder?->headers)->toBe([
+        PseudoHeader::Method,
+        PseudoHeader::Scheme,
+        PseudoHeader::Authority,
+        PseudoHeader::Path,
+    ]);
+})->with([['v184'], ['v184iOS'], ['v260'], ['v260iOS']]);
+
+it('26.x uses TLS 1.2 minimum', function (string $method): void {
+    /** @var Profile $profile */
+    $profile = Safari::$method();
+
+    expect($profile->tlsOptions?->minTlsVersion?->value)->toBe('1.2');
+})->with([['v260'], ['v260iOS']]);
+
+it('26.0 desktop has MLKEM curves', function (): void {
+    $profile = Safari::v260();
+
+    expect($profile->tlsOptions?->curvesList)->toContain('X25519MLKEM768');
+});
+
+it('26.0 iOS does not have MLKEM curves', function (): void {
+    $profile = Safari::v260iOS();
+
+    expect($profile->tlsOptions?->curvesList)->not->toContain('X25519MLKEM768');
+});
+
+it('26.x has zstd encoding', function (): void {
+    $profile = Safari::v260();
+
+    expect($profile->defaultHeaders['Accept-Encoding'])->toContain('zstd');
+});
+
+it('26.x has session ticket enabled', function (): void {
+    $profile = Safari::v260();
+
+    expect($profile->tlsOptions?->sessionTicket)->toBeTrue();
+});
+
+it('172iOS has iPhone User-Agent', function (): void {
+    $profile = Safari::v172iOS();
+
+    expect($profile->defaultHeaders['User-Agent'])->toContain('iPhone');
 });

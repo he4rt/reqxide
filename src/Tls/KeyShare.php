@@ -6,6 +6,7 @@ namespace Reqxide\Tls;
 
 enum KeyShare: string
 {
+    case X25519Kyber768Draft00 = 'X25519Kyber768Draft00';
     case X25519MLKEM768 = 'X25519MLKEM768';
     case X25519 = 'X25519';
     case P256 = 'P-256';

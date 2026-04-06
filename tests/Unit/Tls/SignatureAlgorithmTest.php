@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Reqxide\Tls\SignatureAlgorithm;
 
 it('has the correct number of cases', function (): void {
-    expect(SignatureAlgorithm::cases())->toHaveCount(9);
+    expect(SignatureAlgorithm::cases())->toHaveCount(11);
 });
 
 it('has correct backed values', function (SignatureAlgorithm $case, string $expected): void {
@@ -20,6 +20,8 @@ it('has correct backed values', function (SignatureAlgorithm $case, string $expe
     [SignatureAlgorithm::RsaPkcs1Sha256, 'rsa_pkcs1_sha256'],
     [SignatureAlgorithm::RsaPkcs1Sha384, 'rsa_pkcs1_sha384'],
     [SignatureAlgorithm::RsaPkcs1Sha512, 'rsa_pkcs1_sha512'],
+    [SignatureAlgorithm::EcdsaSha1, 'ecdsa_sha1'],
+    [SignatureAlgorithm::RsaPkcs1Sha1, 'rsa_pkcs1_sha1'],
 ]);
 
 it('can be created from backed value', function (string $value, SignatureAlgorithm $expected): void {
@@ -34,6 +36,8 @@ it('can be created from backed value', function (string $value, SignatureAlgorit
     ['rsa_pkcs1_sha256', SignatureAlgorithm::RsaPkcs1Sha256],
     ['rsa_pkcs1_sha384', SignatureAlgorithm::RsaPkcs1Sha384],
     ['rsa_pkcs1_sha512', SignatureAlgorithm::RsaPkcs1Sha512],
+    ['ecdsa_sha1', SignatureAlgorithm::EcdsaSha1],
+    ['rsa_pkcs1_sha1', SignatureAlgorithm::RsaPkcs1Sha1],
 ]);
 
 it('returns null for invalid tryFrom', function (): void {

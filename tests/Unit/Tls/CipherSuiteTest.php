@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Reqxide\Tls\CipherSuite;
 
 it('has the correct number of cases', function (): void {
-    expect(CipherSuite::cases())->toHaveCount(15);
+    expect(CipherSuite::cases())->toHaveCount(26);
 });
 
 it('has correct backed values for TLS 1.3 ciphers', function (CipherSuite $case, string $expected): void {

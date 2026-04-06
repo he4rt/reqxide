@@ -14,8 +14,7 @@ it('returns a Profile with non-null tlsOptions and http2Options for each version
         ->and($profile->tlsOptions)->not->toBeNull()
         ->and($profile->http2Options)->not->toBeNull();
 })->with([
-    ['v136'],
-    ['v135'],
+    ['v133'], ['v135'], ['v136'], ['v144'], ['v147'],
 ]);
 
 it('does NOT have GREASE enabled', function (): void {
@@ -75,3 +74,54 @@ it('has non-null originalHeaderMap', function (): void {
 
     expect($profile->originalHeaderMap)->not->toBeNull();
 });
+
+// curl_impersonate Firefox tests
+
+it('v133 has MLKEM in curvesList', function (): void {
+    $profile = Firefox::v133();
+
+    expect($profile->tlsOptions?->curvesList)->toContain('X25519MLKEM768');
+});
+
+it('v133 has keySharesLimit 3', function (): void {
+    $profile = Firefox::v133();
+
+    expect($profile->tlsOptions?->keySharesLimit)->toBe(3);
+});
+
+it('v133 has recordSizeLimit 4001', function (): void {
+    $profile = Firefox::v133();
+
+    expect($profile->tlsOptions?->recordSizeLimit)->toBe(4001);
+});
+
+it('v133 has certificateCompressors', function (): void {
+    $profile = Firefox::v133();
+
+    expect($profile->tlsOptions?->certificateCompressors)->toHaveCount(3);
+});
+
+it('v133 has delegatedCredentials', function (): void {
+    $profile = Firefox::v133();
+
+    expect($profile->tlsOptions?->delegatedCredentials)->not->toBeNull();
+});
+
+it('v133 has macOS User-Agent', function (): void {
+    $profile = Firefox::v133();
+
+    expect($profile->defaultHeaders['User-Agent'])->toContain('Macintosh');
+});
+
+it('v133 has TE trailers header', function (): void {
+    $profile = Firefox::v133();
+
+    expect($profile->defaultHeaders)->toHaveKey('TE');
+});
+
+it('CI profiles have extensionPermutation', function (string $method): void {
+    /** @var Profile $profile */
+    $profile = Firefox::$method();
+
+    expect($profile->tlsOptions?->extensionPermutation)->not->toBeNull();
+})->with([['v133'], ['v144'], ['v147']]);

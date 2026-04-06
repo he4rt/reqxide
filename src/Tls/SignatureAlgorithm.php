@@ -15,4 +15,8 @@ enum SignatureAlgorithm: string
     case RsaPkcs1Sha256 = 'rsa_pkcs1_sha256';
     case RsaPkcs1Sha384 = 'rsa_pkcs1_sha384';
     case RsaPkcs1Sha512 = 'rsa_pkcs1_sha512';
+
+    // Legacy (Firefox, Safari 15.x, Tor)
+    case EcdsaSha1 = 'ecdsa_sha1';
+    case RsaPkcs1Sha1 = 'rsa_pkcs1_sha1';
 }
