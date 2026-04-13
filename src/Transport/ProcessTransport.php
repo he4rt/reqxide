@@ -58,10 +58,10 @@ final readonly class ProcessTransport implements TransportInterface
         $exitCode = proc_close($process);
 
         if ($exitCode !== 0 || $stdout === false) {
-            throw new NetworkException(
+            throw NetworkException::fromCurlExitCode(
                 $request,
-                'curl_impersonate failed (exit '.$exitCode.'): '.($stderr !== false && $stderr !== '' ? $stderr : 'unknown error'),
                 $exitCode,
+                $stderr !== false && $stderr !== '' ? trim($stderr) : '',
             );
         }
 

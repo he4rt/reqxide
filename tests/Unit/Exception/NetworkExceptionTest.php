@@ -51,3 +51,29 @@ it('defaults to empty message and zero code', function (): void {
     expect($exception->getMessage())->toBe('')
         ->and($exception->getCode())->toBe(0);
 });
+
+it('creates from curl exit code with stderr detail', function (): void {
+    $request = new Request('GET', 'https://example.com');
+    $exception = NetworkException::fromCurlExitCode($request, 7, 'Connection refused');
+
+    expect($exception)->toBeInstanceOf(NetworkException::class)
+        ->and($exception->getMessage())->toBe('curl_impersonate failed (exit 7): Connection refused')
+        ->and($exception->getCode())->toBe(7)
+        ->and($exception->getRequest())->toBe($request);
+});
+
+it('creates from curl exit code with mapped description when stderr is empty', function (): void {
+    $request = new Request('GET', 'https://example.com');
+    $exception = NetworkException::fromCurlExitCode($request, 28);
+
+    expect($exception->getMessage())->toBe('curl_impersonate failed (exit 28): operation timed out')
+        ->and($exception->getCode())->toBe(28);
+});
+
+it('creates from curl exit code with unknown code fallback', function (): void {
+    $request = new Request('GET', 'https://example.com');
+    $exception = NetworkException::fromCurlExitCode($request, 999);
+
+    expect($exception->getMessage())->toBe('curl_impersonate failed (exit 999): unknown error (code 999)')
+        ->and($exception->getCode())->toBe(999);
+});
