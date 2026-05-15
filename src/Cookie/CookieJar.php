@@ -182,9 +182,18 @@ class CookieJar implements CookieStoreInterface
             return true;
         }
 
+        if ($this->isIpAddress($host)) {
+            return false;
+        }
+
         return strlen($host) > strlen($domain)
             && $host[strlen($host) - strlen($domain) - 1] === '.'
             && str_ends_with($host, $domain);
+    }
+
+    private function isIpAddress(string $host): bool
+    {
+        return filter_var($host, FILTER_VALIDATE_IP) !== false;
     }
 
     /**
