@@ -168,3 +168,63 @@ it('joins multiple cookies with semicolon and space', function (): void {
     expect($captured)->toBeInstanceOf(RequestInterface::class)
         ->and($captured->getHeaderLine('Cookie'))->toBe('a=1; b=2; c=3');
 });
+
+it('sends each cookie as separate header for HTTP/2', function (): void {
+    $jar = new class implements CookieStoreInterface
+    {
+        public function setCookies(array $cookieHeaders, UriInterface $uri): void {}
+
+        public function getCookies(UriInterface $uri): array
+        {
+            return ['a=1', 'b=2', 'c=3'];
+        }
+
+        public function clear(): void {}
+    };
+
+    $middleware = new CookieMiddleware($jar);
+    $request = (new Request('GET', 'https://example.com'))->withProtocolVersion('2');
+
+    /** @var RequestInterface|null $captured */
+    $captured = null;
+    $response = new Response(200);
+
+    $middleware->handle($request, static function (RequestInterface $req) use (&$captured, $response): ResponseInterface {
+        $captured = $req;
+
+        return $response;
+    });
+
+    expect($captured)->toBeInstanceOf(RequestInterface::class)
+        ->and($captured->getHeader('Cookie'))->toBe(['a=1', 'b=2', 'c=3']);
+});
+
+it('combines cookies into single header for HTTP/1.1', function (): void {
+    $jar = new class implements CookieStoreInterface
+    {
+        public function setCookies(array $cookieHeaders, UriInterface $uri): void {}
+
+        public function getCookies(UriInterface $uri): array
+        {
+            return ['x=1', 'y=2'];
+        }
+
+        public function clear(): void {}
+    };
+
+    $middleware = new CookieMiddleware($jar);
+    $request = (new Request('GET', 'https://example.com'))->withProtocolVersion('1.1');
+
+    /** @var RequestInterface|null $captured */
+    $captured = null;
+    $response = new Response(200);
+
+    $middleware->handle($request, static function (RequestInterface $req) use (&$captured, $response): ResponseInterface {
+        $captured = $req;
+
+        return $response;
+    });
+
+    expect($captured)->toBeInstanceOf(RequestInterface::class)
+        ->and($captured->getHeader('Cookie'))->toBe(['x=1; y=2']);
+});
