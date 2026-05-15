@@ -13,10 +13,12 @@ use Reqxide\Http2\SettingId;
 use Reqxide\Http2\SettingsOrder;
 use Reqxide\Http2\StreamDependency;
 use Reqxide\Tls\AlpnProtocol;
-use Reqxide\Tls\CertificateCompressor;
+use Reqxide\Tls\BrotliCompressor;
 use Reqxide\Tls\KeyShare;
 use Reqxide\Tls\TlsOptions;
 use Reqxide\Tls\TlsVersion;
+use Reqxide\Tls\ZlibCompressor;
+use Reqxide\Tls\ZstdCompressor;
 
 final class Firefox
 {
@@ -217,7 +219,7 @@ final class Firefox
             ->sessionTicket(true)
             ->recordSizeLimit(4001)
             ->delegatedCredentials(self::CI_DELEGATED_CREDENTIALS)
-            ->certificateCompressors([CertificateCompressor::Zlib, CertificateCompressor::Brotli, CertificateCompressor::Zstd])
+            ->certificateCompressors([new ZlibCompressor, new BrotliCompressor, new ZstdCompressor])
             ->extensionPermutation($extensionOrder)
             ->build();
     }

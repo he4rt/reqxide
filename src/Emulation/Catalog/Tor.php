@@ -13,10 +13,12 @@ use Reqxide\Http2\SettingId;
 use Reqxide\Http2\SettingsOrder;
 use Reqxide\Http2\StreamDependency;
 use Reqxide\Tls\AlpnProtocol;
-use Reqxide\Tls\CertificateCompressor;
+use Reqxide\Tls\BrotliCompressor;
 use Reqxide\Tls\KeyShare;
 use Reqxide\Tls\TlsOptions;
 use Reqxide\Tls\TlsVersion;
+use Reqxide\Tls\ZlibCompressor;
+use Reqxide\Tls\ZstdCompressor;
 
 final class Tor
 {
@@ -57,7 +59,7 @@ final class Tor
             ->sessionTicket(true)
             ->recordSizeLimit(16385)
             ->delegatedCredentials(self::DELEGATED_CREDENTIALS)
-            ->certificateCompressors([CertificateCompressor::Zlib, CertificateCompressor::Brotli, CertificateCompressor::Zstd])
+            ->certificateCompressors([new ZlibCompressor, new BrotliCompressor, new ZstdCompressor])
             ->extensionPermutation([0, 23, 65281, 10, 11, 16, 5, 34, 51, 43, 13, 28, 65037])
             ->build();
     }

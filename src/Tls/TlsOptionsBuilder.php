@@ -53,7 +53,7 @@ final class TlsOptionsBuilder
 
     private ?bool $preserveTls13CipherList = null;
 
-    /** @var list<CertificateCompressor>|null */
+    /** @var list<CertificateCompressorInterface>|null */
     private ?array $certificateCompressors = null;
 
     /** @var list<int>|null */
@@ -220,7 +220,7 @@ final class TlsOptionsBuilder
         return $this;
     }
 
-    /** @param  list<CertificateCompressor>  $compressors */
+    /** @param  list<CertificateCompressorInterface>  $compressors */
     public function certificateCompressors(array $compressors): self
     {
         $this->certificateCompressors = $compressors;

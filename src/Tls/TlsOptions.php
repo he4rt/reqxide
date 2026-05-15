@@ -10,7 +10,7 @@ readonly class TlsOptions
      * @param  list<AlpnProtocol>|null  $alpnProtocols
      * @param  list<AlpsProtocol>|null  $alpsProtocols
      * @param  list<KeyShare>|null  $keyShares
-     * @param  list<CertificateCompressor>|null  $certificateCompressors
+     * @param  list<CertificateCompressorInterface>|null  $certificateCompressors
      * @param  list<int>|null  $extensionPermutation
      */
     public function __construct(

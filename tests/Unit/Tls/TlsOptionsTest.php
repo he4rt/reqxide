@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 use Reqxide\Tls\AlpnProtocol;
 use Reqxide\Tls\AlpsProtocol;
-use Reqxide\Tls\CertificateCompressor;
+use Reqxide\Tls\BrotliCompressor;
 use Reqxide\Tls\KeyShare;
 use Reqxide\Tls\TlsOptions;
 use Reqxide\Tls\TlsOptionsBuilder;
 use Reqxide\Tls\TlsVersion;
+use Reqxide\Tls\ZlibCompressor;
 
 it('has correct defaults when constructed with no arguments', function (): void {
     $options = new TlsOptions;
@@ -45,7 +46,7 @@ it('can be constructed with all parameters', function (): void {
     $alpnProtocols = [AlpnProtocol::Http1, AlpnProtocol::Http2];
     $alpsProtocols = [AlpsProtocol::Http2];
     $keyShares = [KeyShare::X25519, KeyShare::P256];
-    $certificateCompressors = [CertificateCompressor::Brotli, CertificateCompressor::Zlib];
+    $certificateCompressors = [new BrotliCompressor, new ZlibCompressor];
     $extensionPermutation = [1, 2, 3];
 
     $options = new TlsOptions(
