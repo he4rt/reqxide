@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Reqxide\Emulation\Catalog\Firefox;
 use Reqxide\Emulation\Profile;
 use Reqxide\Http2\PseudoHeader;
+use Reqxide\Tls\KeyShare;
 
 it('returns a Profile with non-null tlsOptions and http2Options for each version', function (string $method): void {
     /** @var Profile $profile */
@@ -83,10 +84,10 @@ it('v133 has MLKEM in curvesList', function (): void {
     expect($profile->tlsOptions?->curvesList)->toContain('X25519MLKEM768');
 });
 
-it('v133 has keySharesLimit 3', function (): void {
+it('v133 has explicit keyShares', function (): void {
     $profile = Firefox::v133();
 
-    expect($profile->tlsOptions?->keySharesLimit)->toBe(3);
+    expect($profile->tlsOptions?->keyShares)->toBe([KeyShare::X25519MLKEM768, KeyShare::X25519, KeyShare::P256]);
 });
 
 it('v133 has recordSizeLimit 4001', function (): void {

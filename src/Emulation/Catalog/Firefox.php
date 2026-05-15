@@ -191,7 +191,6 @@ final class Firefox
             ->curvesList(self::CI_CURVES_LIST)
             ->alpnProtocols([AlpnProtocol::Http2, AlpnProtocol::Http1])
             ->keyShares([KeyShare::X25519MLKEM768, KeyShare::X25519, KeyShare::P256])
-            ->keySharesLimit(3)
             ->enableOcspStapling(true)
             ->enableSignedCertTimestamps($signedCertTimestamps)
             ->greaseEnabled(false)

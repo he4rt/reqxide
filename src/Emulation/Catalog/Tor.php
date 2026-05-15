@@ -49,7 +49,6 @@ final class Tor
             ->curvesList(self::CURVES_LIST)
             ->alpnProtocols([AlpnProtocol::Http2, AlpnProtocol::Http1])
             ->keyShares([KeyShare::X25519, KeyShare::P256])
-            ->keySharesLimit(2)
             ->enableOcspStapling(true)
             ->enableSignedCertTimestamps(true)
             ->greaseEnabled(false)

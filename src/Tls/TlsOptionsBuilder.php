@@ -39,8 +39,6 @@ final class TlsOptionsBuilder
     /** @var list<KeyShare>|null */
     private ?array $keyShares = null;
 
-    private ?int $keySharesLimit = null;
-
     private bool $pskDheKe = true;
 
     private bool $renegotiation = true;
@@ -173,13 +171,6 @@ final class TlsOptionsBuilder
         return $this;
     }
 
-    public function keySharesLimit(int $limit): self
-    {
-        $this->keySharesLimit = $limit;
-
-        return $this;
-    }
-
     public function pskDheKe(bool $enabled): self
     {
         $this->pskDheKe = $enabled;
@@ -277,7 +268,6 @@ final class TlsOptionsBuilder
             recordSizeLimit: $this->recordSizeLimit,
             pskSkipSessionTicket: $this->pskSkipSessionTicket,
             keyShares: $this->keyShares,
-            keySharesLimit: $this->keySharesLimit,
             pskDheKe: $this->pskDheKe,
             renegotiation: $this->renegotiation,
             delegatedCredentials: $this->delegatedCredentials,
