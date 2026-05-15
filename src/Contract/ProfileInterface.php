@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Reqxide\Contract;
 
+use Reqxide\Emulation\ConnectionGroup;
 use Reqxide\Http1\Http1Options;
 use Reqxide\Http1\OriginalHeaderMap;
 use Reqxide\Http2\Http2Options;
@@ -21,4 +22,6 @@ interface ProfileInterface
     public function defaultHeaders(): array;
 
     public function originalHeaderMap(): ?OriginalHeaderMap;
+
+    public function connectionGroup(): ?ConnectionGroup;
 }

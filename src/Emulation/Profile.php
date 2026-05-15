@@ -21,6 +21,7 @@ readonly class Profile implements ProfileInterface
         public ?Http1Options $http1Options = null,
         public array $defaultHeaders = [],
         public ?OriginalHeaderMap $originalHeaderMap = null,
+        public ?ConnectionGroup $connectionGroup = null,
     ) {}
 
     public function tlsOptions(): ?TlsOptions
@@ -47,5 +48,10 @@ readonly class Profile implements ProfileInterface
     public function originalHeaderMap(): ?OriginalHeaderMap
     {
         return $this->originalHeaderMap;
+    }
+
+    public function connectionGroup(): ?ConnectionGroup
+    {
+        return $this->connectionGroup;
     }
 }
