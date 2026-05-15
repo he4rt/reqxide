@@ -6,7 +6,7 @@ use Reqxide\Emulation\Browser;
 use Reqxide\Emulation\Profile;
 
 it('has the correct number of cases', function (): void {
-    expect(Browser::cases())->toHaveCount(44);
+    expect(Browser::cases())->toHaveCount(47);
 });
 
 it('has correct backed values', function (Browser $case, string $expected): void {
@@ -32,6 +32,7 @@ it('has correct backed values', function (Browser $case, string $expected): void
     [Browser::Chrome142, 'chrome_142'],
     [Browser::Chrome145, 'chrome_145'],
     [Browser::Chrome146, 'chrome_146'],
+    [Browser::Chrome147, 'chrome_147'],
     [Browser::Chrome99Android, 'chrome_99_android'],
     [Browser::Chrome131Android, 'chrome_131_android'],
     [Browser::Firefox133, 'firefox_133'],
@@ -39,6 +40,8 @@ it('has correct backed values', function (Browser $case, string $expected): void
     [Browser::Firefox136, 'firefox_136'],
     [Browser::Firefox144, 'firefox_144'],
     [Browser::Firefox147, 'firefox_147'],
+    [Browser::Firefox148, 'firefox_148'],
+    [Browser::Firefox149, 'firefox_149'],
     [Browser::Safari153, 'safari_15_3'],
     [Browser::Safari155, 'safari_15_5'],
     [Browser::Safari170, 'safari_17_0'],

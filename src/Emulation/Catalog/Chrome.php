@@ -344,6 +344,26 @@ final class Chrome
         );
     }
 
+    public static function v147(): Profile
+    {
+        return self::ciProfile(
+            version: '147.0.0.0',
+            secChUa: ChromeSecChUa::generate(147),
+            platform: 'macOS',
+            tls: self::ciTls(
+                permute: true,
+                ech: true,
+                alpsNew: true,
+                curves: 'X25519MLKEM768:X25519:P-256:P-384',
+                keyShares: [KeyShare::X25519MLKEM768, KeyShare::X25519],
+            ),
+            http2: self::ciHttp2(withEnablePush: true, withMaxConcurrent: false),
+            acceptQuality: '0.7',
+            encoding: 'gzip, deflate, br, zstd',
+            priority: true,
+        );
+    }
+
     // ─── Chrome Android ───
 
     public static function v99Android(): Profile

@@ -27,6 +27,7 @@ enum Browser: string
     case Chrome142 = 'chrome_142';
     case Chrome145 = 'chrome_145';
     case Chrome146 = 'chrome_146';
+    case Chrome147 = 'chrome_147';
 
     // Chrome Android
     case Chrome99Android = 'chrome_99_android';
@@ -38,6 +39,8 @@ enum Browser: string
     case Firefox136 = 'firefox_136';
     case Firefox144 = 'firefox_144';
     case Firefox147 = 'firefox_147';
+    case Firefox148 = 'firefox_148';
+    case Firefox149 = 'firefox_149';
 
     // Safari
     case Safari153 = 'safari_15_3';

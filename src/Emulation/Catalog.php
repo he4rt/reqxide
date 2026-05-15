@@ -37,6 +37,7 @@ final class Catalog
             Browser::Chrome142 => Chrome::v142(),
             Browser::Chrome145 => Chrome::v145(),
             Browser::Chrome146 => Chrome::v146(),
+            Browser::Chrome147 => Chrome::v147(),
 
             // Chrome Android
             Browser::Chrome99Android => Chrome::v99Android(),
@@ -48,6 +49,8 @@ final class Catalog
             Browser::Firefox136 => Firefox::v136(),
             Browser::Firefox144 => Firefox::v144(),
             Browser::Firefox147 => Firefox::v147(),
+            Browser::Firefox148 => Firefox::v148(),
+            Browser::Firefox149 => Firefox::v149(),
 
             // Safari
             Browser::Safari153 => Safari::v153(),
