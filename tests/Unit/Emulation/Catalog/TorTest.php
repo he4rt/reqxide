@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Reqxide\Emulation\Catalog\Tor;
 use Reqxide\Emulation\Profile;
 use Reqxide\Http2\PseudoHeader;
+use Reqxide\Tls\KeyShare;
 
 it('returns a Profile with non-null tlsOptions and http2Options', function (): void {
     $profile = Tor::v145();
@@ -27,10 +28,10 @@ it('has Sec-GPC header', function (): void {
         ->and($profile->defaultHeaders['Sec-GPC'])->toBe('1');
 });
 
-it('has keySharesLimit 2', function (): void {
+it('has explicit keyShares', function (): void {
     $profile = Tor::v145();
 
-    expect($profile->tlsOptions?->keySharesLimit)->toBe(2);
+    expect($profile->tlsOptions?->keyShares)->toBe([KeyShare::X25519, KeyShare::P256]);
 });
 
 it('has recordSizeLimit 16385', function (): void {
