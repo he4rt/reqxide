@@ -77,3 +77,37 @@ it('creates from curl exit code with unknown code fallback', function (): void {
     expect($exception->getMessage())->toBe('curl_impersonate failed (exit 999): unknown error (code 999)')
         ->and($exception->getCode())->toBe(999);
 });
+
+it('describes all known curl exit codes', function (int $code, string $expected): void {
+    $request = new Request('GET', 'https://example.com');
+    $exception = NetworkException::fromCurlExitCode($request, $code);
+
+    expect($exception->getMessage())->toContain($expected);
+})->with([
+    [1, 'unsupported protocol'],
+    [2, 'failed to initialize'],
+    [3, 'malformed URL'],
+    [5, 'could not resolve proxy'],
+    [6, 'could not resolve host'],
+    [7, 'connection refused'],
+    [9, 'access denied (login/credentials)'],
+    [18, 'partial transfer (connection closed prematurely)'],
+    [22, 'HTTP error (server returned >= 400)'],
+    [23, 'write error (disk full or permissions)'],
+    [26, 'read error (could not read local file)'],
+    [27, 'out of memory'],
+    [33, 'range error (server does not support byte ranges)'],
+    [35, 'SSL/TLS handshake failed'],
+    [47, 'too many redirects'],
+    [51, 'SSL certificate verification failed (peer)'],
+    [52, 'empty reply from server'],
+    [55, 'send error (network failure)'],
+    [56, 'receive error (connection reset)'],
+    [58, 'SSL client certificate error'],
+    [60, 'SSL CA certificate not found or not trusted'],
+    [67, 'login denied (authentication failure)'],
+    [77, 'SSL CA certificate path error'],
+    [92, 'HTTP/2 stream error'],
+    [95, 'HTTP/2 error'],
+    [97, 'HTTP/3 error'],
+]);

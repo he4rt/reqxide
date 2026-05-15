@@ -166,3 +166,12 @@ it('handles a cookie header with no equals sign', function (): void {
     expect($cookie->name)->toBe('justname')
         ->and($cookie->value)->toBe('');
 });
+
+it('skips empty parts from consecutive semicolons', function (): void {
+    $cookie = Cookie::parse('name=val;; ; Secure;;Path=/');
+
+    expect($cookie->name)->toBe('name')
+        ->and($cookie->value)->toBe('val')
+        ->and($cookie->secure)->toBeTrue()
+        ->and($cookie->path)->toBe('/');
+});

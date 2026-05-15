@@ -165,6 +165,20 @@ it('strips Content-Encoding when body is already decompressed (zstd)', function 
         ->and($result->hasHeader('Content-Length'))->toBeFalse();
 });
 
+it('returns empty string for empty compressed body', function (): void {
+    $middleware = new CompressionMiddleware;
+    $request = new Request('GET', 'https://example.com');
+
+    $response = new Response(200, [
+        'Content-Encoding' => 'gzip',
+    ], '');
+
+    $result = $middleware->handle($request, static fn (RequestInterface $req): ResponseInterface => $response);
+
+    expect((string) $result->getBody())->toBe('')
+        ->and($result->hasHeader('Content-Encoding'))->toBeFalse();
+});
+
 it('handles truncated gzip data without warning', function (): void {
     $middleware = new CompressionMiddleware;
     $request = new Request('GET', 'https://example.com');

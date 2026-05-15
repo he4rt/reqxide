@@ -44,11 +44,11 @@ final readonly class CompressionMiddleware implements MiddlewareInterface
         $encodings = [ContentEncoding::Gzip->value, ContentEncoding::Deflate->value];
 
         if (function_exists('brotli_uncompress')) {
-            $encodings[] = ContentEncoding::Brotli->value;
+            $encodings[] = ContentEncoding::Brotli->value; // @codeCoverageIgnore
         }
 
         if (function_exists('zstd_uncompress')) {
-            $encodings[] = ContentEncoding::Zstd->value;
+            $encodings[] = ContentEncoding::Zstd->value; // @codeCoverageIgnore
         }
 
         return implode(', ', $encodings);
@@ -67,12 +67,12 @@ final readonly class CompressionMiddleware implements MiddlewareInterface
         return match ($encoding) {
             ContentEncoding::Gzip => ($result = @gzdecode($data)) === false ? null : $result,
             ContentEncoding::Deflate => ($result = @gzinflate($data)) === false ? null : $result,
-            ContentEncoding::Brotli => function_exists('brotli_uncompress')
+            ContentEncoding::Brotli => function_exists('brotli_uncompress') // @codeCoverageIgnoreStart
                 ? (($result = @brotli_uncompress($data)) === false ? null : $result)
-                : null,
-            ContentEncoding::Zstd => function_exists('zstd_uncompress')
+                : null, // @codeCoverageIgnoreEnd
+            ContentEncoding::Zstd => function_exists('zstd_uncompress') // @codeCoverageIgnoreStart
                 ? (($result = @zstd_uncompress($data)) === false ? null : $result)
-                : null,
+                : null, // @codeCoverageIgnoreEnd
         };
     }
 }

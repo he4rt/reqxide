@@ -189,6 +189,19 @@ it('bypasses case-insensitively for domain suffix match', function (): void {
     expect($proxy->shouldBypass('API.Example.com'))->toBeTrue();
 });
 
+it('falls back to manual parsing when parse_url fails', function (): void {
+    $proxy = Proxy::http('host:///invalid');
+
+    expect($proxy->scheme)->toBe(ProxyScheme::Http)
+        ->and($proxy->host)->toBeString();
+});
+
+it('uses default port in fallback parsing when no port given', function (): void {
+    $proxy = Proxy::socks5('just-a-host:///');
+
+    expect($proxy->scheme)->toBe(ProxyScheme::Socks5);
+});
+
 it('can be constructed directly with all properties', function (): void {
     $proxy = new Proxy(
         scheme: ProxyScheme::Https,

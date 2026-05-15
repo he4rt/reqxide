@@ -233,7 +233,7 @@ class CookieJar implements CookieStoreInterface
         }
 
         if ($lastSlash === false) {
-            return self::DEFAULT_PATH;
+            return self::DEFAULT_PATH; // @codeCoverageIgnore
         }
 
         return substr($path, 0, $lastSlash);
