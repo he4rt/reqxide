@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Reqxide\Emulation\Catalog;
 
+use Reqxide\Emulation\ChromeSecChUa;
 use Reqxide\Emulation\Profile;
 
 final class Edge
@@ -13,7 +14,7 @@ final class Edge
         $chromeProfile = Chrome::v131();
 
         $headers = $chromeProfile->defaultHeaders;
-        $headers['sec-ch-ua'] = '"Microsoft Edge";v="131", "Chromium";v="131", "Not_A Brand";v="24"';
+        $headers['sec-ch-ua'] = ChromeSecChUa::generate(131, 'Microsoft Edge');
         $headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0';
 
         return new Profile(
