@@ -126,10 +126,8 @@ final class Firefox
         return Http2Options::builder()
             ->headerTableSize(65536)
             ->enablePush(false)
-            ->maxConcurrentStreams(100)
             ->initialWindowSize(131072)
             ->maxFrameSize(16384)
-            ->maxHeaderListSize(65536)
             ->initialConnWindowSize(12582912)
             ->headersPseudoOrder(new PseudoHeaderOrder([
                 PseudoHeader::Method,
@@ -140,10 +138,8 @@ final class Firefox
             ->settingsOrder(new SettingsOrder([
                 SettingId::HeaderTableSize,
                 SettingId::EnablePush,
-                SettingId::MaxConcurrentStreams,
                 SettingId::InitialWindowSize,
                 SettingId::MaxFrameSize,
-                SettingId::MaxHeaderListSize,
             ]))
             ->build();
     }

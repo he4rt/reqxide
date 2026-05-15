@@ -427,9 +427,7 @@ final class Chrome
         return Http2Options::builder()
             ->headerTableSize(65536)
             ->enablePush(false)
-            ->maxConcurrentStreams(1000)
             ->initialWindowSize(6291456)
-            ->maxFrameSize(16384)
             ->maxHeaderListSize(262144)
             ->initialConnWindowSize(15663105)
             ->headersPseudoOrder(new PseudoHeaderOrder([
@@ -441,9 +439,7 @@ final class Chrome
             ->settingsOrder(new SettingsOrder([
                 SettingId::HeaderTableSize,
                 SettingId::EnablePush,
-                SettingId::MaxConcurrentStreams,
                 SettingId::InitialWindowSize,
-                SettingId::MaxFrameSize,
                 SettingId::MaxHeaderListSize,
             ]))
             ->build();
