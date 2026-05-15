@@ -15,7 +15,7 @@ final class Catalog
 {
     public static function resolve(Browser $browser): Profile
     {
-        return match ($browser) {
+        $profile = match ($browser) {
             // Chrome Desktop
             Browser::Chrome99 => Chrome::v99(),
             Browser::Chrome100 => Chrome::v100(),
@@ -77,5 +77,14 @@ final class Catalog
             // Tor
             Browser::Tor145 => Tor::v145(),
         };
+
+        return new Profile(
+            tlsOptions: $profile->tlsOptions,
+            http2Options: $profile->http2Options,
+            http1Options: $profile->http1Options,
+            defaultHeaders: $profile->defaultHeaders,
+            originalHeaderMap: $profile->originalHeaderMap,
+            connectionGroup: ConnectionGroup::named($browser->value),
+        );
     }
 }
