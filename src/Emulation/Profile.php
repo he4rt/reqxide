@@ -22,6 +22,7 @@ readonly class Profile implements ProfileInterface
         public array $defaultHeaders = [],
         public ?OriginalHeaderMap $originalHeaderMap = null,
         public ?ConnectionGroup $connectionGroup = null,
+        public ?string $impersonateTarget = null,
     ) {}
 
     public function tlsOptions(): ?TlsOptions

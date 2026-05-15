@@ -21,7 +21,7 @@ final readonly class ProcessTransport implements TransportInterface
 
     public function send(RequestInterface $request, Profile $profile, TransportOptions $options): ResponseInterface
     {
-        $binary = $this->binaryPath ?? self::detectBinaryPath();
+        $binary = $this->resolveBinary($profile);
 
         if ($binary === null) {
             throw new TransportException('curl_impersonate binary not found. Install curl-impersonate or set the binary path.'); // @codeCoverageIgnore
@@ -30,8 +30,8 @@ final readonly class ProcessTransport implements TransportInterface
         $args = $this->buildArguments($request, $profile, $options);
         $command = escapeshellcmd($binary).' '.implode(' ', array_map(escapeshellarg(...), $args));
 
-        // Include response headers with -D - and suppress progress meter
-        $command .= ' -s -D -';
+        // -s: suppress progress meter, -S: show errors in stderr, -D -: dump headers to stdout
+        $command .= ' -sS -D -';
 
         $process = proc_open(
             $command,
@@ -76,6 +76,30 @@ final readonly class ProcessTransport implements TransportInterface
     public function supportsHttp2Configuration(): bool
     {
         return true;
+    }
+
+    private function resolveBinary(Profile $profile): ?string
+    {
+        if ($this->binaryPath !== null) {
+            return $this->binaryPath;
+        }
+
+        if ($profile->impersonateTarget !== null) {
+            $targetBinary = 'curl_'.$profile->impersonateTarget;
+
+            $envPath = getenv('REQXIDE_CURL_IMPERSONATE_DIR');
+            if ($envPath !== false && is_executable($envPath.'/'.$targetBinary)) {
+                return $envPath.'/'.$targetBinary;
+            }
+
+            foreach (['/usr/local/bin', '/usr/bin'] as $dir) {
+                if (is_executable($dir.'/'.$targetBinary)) {
+                    return $dir.'/'.$targetBinary;
+                }
+            }
+        }
+
+        return self::detectBinaryPath();
     }
 
     public static function detectBinaryPath(): ?string

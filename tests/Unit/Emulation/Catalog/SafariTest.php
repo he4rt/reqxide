@@ -25,21 +25,10 @@ it('does NOT have ECH GREASE', function (): void {
     expect($profile->tlsOptions?->enableEchGrease)->toBeFalse();
 });
 
-it('does NOT have GREASE enabled for wreq profiles', function (): void {
+it('has GREASE enabled for v18', function (): void {
     $profile = Safari::v18();
 
-    expect($profile->tlsOptions?->greaseEnabled)->toBeFalse();
-});
-
-it('has pseudo order of Method, Scheme, Path, Authority for wreq', function (): void {
-    $profile = Safari::v18();
-
-    expect($profile->http2Options?->headersPseudoOrder?->headers)->toBe([
-        PseudoHeader::Method,
-        PseudoHeader::Scheme,
-        PseudoHeader::Path,
-        PseudoHeader::Authority,
-    ]);
+    expect($profile->tlsOptions?->greaseEnabled)->toBeTrue();
 });
 
 it('has iPad in User-Agent for iPad18', function (): void {
@@ -116,7 +105,7 @@ it('18.x+ uses pseudo msap', function (string $method): void {
         PseudoHeader::Authority,
         PseudoHeader::Path,
     ]);
-})->with([['v184'], ['v184iOS'], ['v260'], ['v260iOS']]);
+})->with([['v18'], ['iPad18'], ['iOS18'], ['v184'], ['v184iOS'], ['v260'], ['v260iOS']]);
 
 it('26.x uses TLS 1.2 minimum', function (string $method): void {
     /** @var Profile $profile */

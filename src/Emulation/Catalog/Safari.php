@@ -20,9 +20,6 @@ use Reqxide\Tls\ZlibCompressor;
 
 final class Safari
 {
-    // wreq cipher list (23 ciphers — with CBC SHA384/SHA256 but NO 3DES)
-    private const string CIPHER_LIST = 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA';
-
     // curl_impersonate Safari 15.3 cipher list (26 ciphers — with SHA384/SHA256 AND 3DES)
     private const string CI_CIPHER_LIST_15_3 = 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:DES-CBC3-SHA';
 
@@ -34,34 +31,49 @@ final class Safari
 
     private const string CURVES_LIST = 'X25519:P-256:P-384:P-521';
 
-    private const string SIGALGS_LIST = 'ecdsa_secp256r1_sha256:rsa_pss_rsae_sha256:rsa_pkcs1_sha256:ecdsa_secp384r1_sha384:rsa_pss_rsae_sha384:rsa_pkcs1_sha384:rsa_pss_rsae_sha512:rsa_pkcs1_sha512:rsa_pkcs1_sha1';
-
     // curl_impersonate sigalgs for Safari 15.x-17.x (includes ecdsa_sha1 + duplicate rsa_pss_rsae_sha384)
     private const string CI_SIGALGS_LEGACY = 'ecdsa_secp256r1_sha256:rsa_pss_rsae_sha256:rsa_pkcs1_sha256:ecdsa_secp384r1_sha384:ecdsa_sha1:rsa_pss_rsae_sha384:rsa_pss_rsae_sha384:rsa_pkcs1_sha384:rsa_pss_rsae_sha512:rsa_pkcs1_sha512:rsa_pkcs1_sha1';
 
     // curl_impersonate sigalgs for Safari 18.x+ (no ecdsa_sha1, has duplicate rsa_pss_rsae_sha384)
     private const string CI_SIGALGS_MODERN = 'ecdsa_secp256r1_sha256:rsa_pss_rsae_sha256:rsa_pkcs1_sha256:ecdsa_secp384r1_sha384:rsa_pss_rsae_sha384:rsa_pss_rsae_sha384:rsa_pkcs1_sha384:rsa_pss_rsae_sha512:rsa_pkcs1_sha512:rsa_pkcs1_sha1';
 
-    // ─── wreq profiles (v18, iPad18, iOS18) — unchanged ───
-
+    // Safari 18.0 — uses CI profile to match curl_safari180 binary
     public static function v18(): Profile
     {
-        return self::buildProfile(
-            userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
+        return new Profile(
+            tlsOptions: self::ciTls18x(),
+            http2Options: self::ciHttp2_180(),
+            defaultHeaders: self::ciHeaders18x(
+                userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
+                encoding: 'gzip, deflate, br',
+            ),
+            originalHeaderMap: self::ciHeaderOrder18x(),
         );
     }
 
     public static function iPad18(): Profile
     {
-        return self::buildProfile(
-            userAgent: 'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
+        return new Profile(
+            tlsOptions: self::ciTls18x(),
+            http2Options: self::ciHttp2_180(),
+            defaultHeaders: self::ciHeaders18x(
+                userAgent: 'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
+                encoding: 'gzip, deflate, br',
+            ),
+            originalHeaderMap: self::ciHeaderOrder18x(),
         );
     }
 
     public static function iOS18(): Profile
     {
-        return self::buildProfile(
-            userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
+        return new Profile(
+            tlsOptions: self::ciTls18x(),
+            http2Options: self::ciHttp2_180(),
+            defaultHeaders: self::ciHeaders18x(
+                userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
+                encoding: 'gzip, deflate, br',
+            ),
+            originalHeaderMap: self::ciHeaderOrder18x(),
         );
     }
 
@@ -173,88 +185,6 @@ final class Safari
         );
     }
 
-    // ─── wreq private helpers (unchanged) ───
-
-    private static function baseTlsOptions(): TlsOptions
-    {
-        return TlsOptions::builder()
-            ->minTlsVersion(TlsVersion::TLS_1_2)
-            ->maxTlsVersion(TlsVersion::TLS_1_3)
-            ->cipherList(self::CIPHER_LIST)
-            ->sigalgsList(self::SIGALGS_LIST)
-            ->curvesList(self::CURVES_LIST)
-            ->alpnProtocols([AlpnProtocol::Http2, AlpnProtocol::Http1])
-            ->keyShares([KeyShare::X25519])
-            ->enableOcspStapling(true)
-            ->enableSignedCertTimestamps(false)
-            ->greaseEnabled(false)
-            ->permuteExtensions(false)
-            ->enableEchGrease(false)
-            ->sessionTicket(true)
-            ->build();
-    }
-
-    private static function baseHttp2Options(): Http2Options
-    {
-        return Http2Options::builder()
-            ->headerTableSize(4096)
-            ->enablePush(false)
-            ->maxConcurrentStreams(100)
-            ->initialWindowSize(2097152)
-            ->maxFrameSize(16384)
-            ->initialConnWindowSize(10485760)
-            ->headersPseudoOrder(new PseudoHeaderOrder([
-                PseudoHeader::Method,
-                PseudoHeader::Scheme,
-                PseudoHeader::Path,
-                PseudoHeader::Authority,
-            ]))
-            ->settingsOrder(new SettingsOrder([
-                SettingId::HeaderTableSize,
-                SettingId::EnablePush,
-                SettingId::MaxConcurrentStreams,
-                SettingId::InitialWindowSize,
-                SettingId::MaxFrameSize,
-            ]))
-            ->build();
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private static function baseHeaders(string $userAgent): array
-    {
-        return [
-            'User-Agent' => $userAgent,
-            'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language' => 'en-US,en;q=0.9',
-            'Accept-Encoding' => 'gzip, deflate, br',
-        ];
-    }
-
-    private static function baseHeaderOrder(): OriginalHeaderMap
-    {
-        return new OriginalHeaderMap([
-            'Host',
-            'Accept',
-            'User-Agent',
-            'Accept-Language',
-            'Accept-Encoding',
-            'Connection',
-            'Cookie',
-        ]);
-    }
-
-    private static function buildProfile(string $userAgent): Profile
-    {
-        return new Profile(
-            tlsOptions: self::baseTlsOptions(),
-            http2Options: self::baseHttp2Options(),
-            defaultHeaders: self::baseHeaders($userAgent),
-            originalHeaderMap: self::baseHeaderOrder(),
-        );
-    }
-
     // ─── curl_impersonate private helpers ───
 
     // TLS: Safari 15.x-17.x (TLS 1.0, no session ticket, GREASE, signedCertTS)
@@ -353,6 +283,33 @@ final class Safari
         }
 
         return $builder->build();
+    }
+
+    // HTTP/2: Safari 18.0 (2:0;3:100;4:2097152;8:1;9:1, pseudo msap, weight 256)
+    private static function ciHttp2_180(): Http2Options
+    {
+        return Http2Options::builder()
+            ->enablePush(false)
+            ->maxConcurrentStreams(100)
+            ->initialWindowSize(2097152)
+            ->enableConnectProtocol(true)
+            ->noRfc7540Priorities(true)
+            ->initialConnWindowSize(10420225)
+            ->headersStreamDependency(new StreamDependency(0, 256, false))
+            ->headersPseudoOrder(new PseudoHeaderOrder([
+                PseudoHeader::Method,
+                PseudoHeader::Scheme,
+                PseudoHeader::Authority,
+                PseudoHeader::Path,
+            ]))
+            ->settingsOrder(new SettingsOrder([
+                SettingId::EnablePush,
+                SettingId::MaxConcurrentStreams,
+                SettingId::InitialWindowSize,
+                SettingId::EnableConnectProtocol,
+                SettingId::NoRfc7540Priorities,
+            ]))
+            ->build();
     }
 
     // HTTP/2: Safari 18.4 (2:0;3:100;4:2097152;9:1, pseudo msap, weight 256)

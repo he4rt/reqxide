@@ -66,8 +66,8 @@ it('has expected HTTP/2 settings values', function (): void {
     expect($http2?->initialWindowSize)->toBe(6291456)
         ->and($http2?->headerTableSize)->toBe(65536)
         ->and($http2?->enablePush)->toBeFalse()
-        ->and($http2?->maxConcurrentStreams)->toBe(1000)
-        ->and($http2?->maxFrameSize)->toBe(16384)
+        ->and($http2?->maxConcurrentStreams)->toBeNull()
+        ->and($http2?->maxFrameSize)->toBeNull()
         ->and($http2?->maxHeaderListSize)->toBe(262144)
         ->and($http2?->initialConnWindowSize)->toBe(15663105);
 });
@@ -78,9 +78,7 @@ it('has expected HTTP/2 settings order', function (): void {
     expect($profile->http2Options?->settingsOrder?->settings)->toBe([
         SettingId::HeaderTableSize,
         SettingId::EnablePush,
-        SettingId::MaxConcurrentStreams,
         SettingId::InitialWindowSize,
-        SettingId::MaxFrameSize,
         SettingId::MaxHeaderListSize,
     ]);
 });

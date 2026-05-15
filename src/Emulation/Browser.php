@@ -71,4 +71,48 @@ enum Browser: string
     {
         return Catalog::resolve($this);
     }
+
+    public function impersonateTarget(): ?string
+    {
+        return match ($this) {
+            self::Chrome99 => 'chrome99',
+            self::Chrome100 => 'chrome100',
+            self::Chrome101 => 'chrome101',
+            self::Chrome104 => 'chrome104',
+            self::Chrome107 => 'chrome107',
+            self::Chrome110 => 'chrome110',
+            self::Chrome116 => 'chrome116',
+            self::Chrome119 => 'chrome119',
+            self::Chrome120 => 'chrome120',
+            self::Chrome123 => 'chrome123',
+            self::Chrome124 => 'chrome124',
+            self::Chrome131 => 'chrome131',
+            self::Chrome133a => 'chrome133a',
+            self::Chrome136 => 'chrome136',
+            self::Chrome142 => 'chrome142',
+            self::Chrome145 => 'chrome145',
+            self::Chrome146 => 'chrome146',
+            self::Chrome99Android => 'chrome99_android',
+            self::Chrome131Android => 'chrome131_android',
+            self::Firefox133 => 'firefox133',
+            self::Firefox135 => 'firefox135',
+            self::Firefox144 => 'firefox144',
+            self::Firefox147 => 'firefox147',
+            self::Safari153 => 'safari153',
+            self::Safari155 => 'safari155',
+            self::Safari170 => 'safari170',
+            self::Safari172iOS => 'safari172_ios',
+            self::Safari18 => 'safari180',
+            self::SafariIPad18 => 'safari180_ios',
+            self::SafariIOS18 => 'safari180_ios',
+            self::Safari184 => 'safari184',
+            self::Safari184iOS => 'safari184_ios',
+            self::Safari260 => 'safari260',
+            self::Safari260iOS => 'safari260_ios',
+            self::Edge99 => 'edge99',
+            self::Edge101 => 'edge101',
+            self::Tor145 => 'tor145',
+            default => null,
+        };
+    }
 }

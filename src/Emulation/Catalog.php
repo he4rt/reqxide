@@ -85,6 +85,7 @@ final class Catalog
             defaultHeaders: $profile->defaultHeaders,
             originalHeaderMap: $profile->originalHeaderMap,
             connectionGroup: ConnectionGroup::named($browser->value),
+            impersonateTarget: $browser->impersonateTarget(),
         );
     }
 }
