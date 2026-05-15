@@ -254,6 +254,7 @@ final class CurlTransport implements TransportInterface
                 ProxyScheme::Https => CURLPROXY_HTTPS,
                 ProxyScheme::Socks4 => CURLPROXY_SOCKS4,
                 ProxyScheme::Socks5 => CURLPROXY_SOCKS5,
+                ProxyScheme::Socks5h => CURLPROXY_SOCKS5_HOSTNAME,
             });
 
             if ($options->proxy->username !== null && $options->proxy->username !== '') {

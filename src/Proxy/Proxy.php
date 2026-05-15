@@ -33,6 +33,11 @@ readonly class Proxy
         return self::parse(ProxyScheme::Socks5, $address);
     }
 
+    public static function socks5h(string $address): self
+    {
+        return self::parse(ProxyScheme::Socks5h, $address);
+    }
+
     public static function socks4(string $address): self
     {
         return self::parse(ProxyScheme::Socks4, $address);
@@ -103,7 +108,7 @@ readonly class Proxy
         return match ($scheme) {
             ProxyScheme::Http => 80,
             ProxyScheme::Https => 443,
-            ProxyScheme::Socks4, ProxyScheme::Socks5 => 1080,
+            ProxyScheme::Socks4, ProxyScheme::Socks5, ProxyScheme::Socks5h => 1080,
         };
     }
 }

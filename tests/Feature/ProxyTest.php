@@ -79,6 +79,32 @@ it('connects through an HTTPS proxy', function (): void {
     expect($response->getStatusCode())->toBe(200);
 })->group('integration', 'proxy');
 
+it('connects through a SOCKS5H proxy (DNS resolved by proxy)', function (): void {
+    if (! extension_loaded('curl')) {
+        $this->markTestSkipped('ext-curl is required for proxy tests.');
+    }
+
+    $proxyHost = getenv('REQXIDE_TEST_SOCKS5H_PROXY');
+
+    if ($proxyHost === false || $proxyHost === '') {
+        $this->markTestSkipped('Set REQXIDE_TEST_SOCKS5H_PROXY env var to run proxy tests (e.g., user:pass@proxy.example.com:7777).');
+    }
+
+    $client = Client::builder()
+        ->emulation(Browser::Chrome145)
+        ->transport(new CurlTransport)
+        ->proxy(Proxy::socks5h($proxyHost))
+        ->timeout(15)
+        ->build();
+
+    $response = $client->get('https://httpbin.org/ip')->send();
+
+    expect($response->getStatusCode())->toBe(200);
+
+    $data = json_decode((string) $response->getBody(), true);
+    expect($data)->toHaveKey('origin');
+})->group('integration', 'proxy');
+
 it('connects through a SOCKS4 proxy', function (): void {
     if (! extension_loaded('curl')) {
         $this->markTestSkipped('ext-curl is required for proxy tests.');

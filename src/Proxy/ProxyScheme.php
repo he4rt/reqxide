@@ -10,4 +10,5 @@ enum ProxyScheme: string
     case Https = 'https';
     case Socks4 = 'socks4';
     case Socks5 = 'socks5';
+    case Socks5h = 'socks5h';
 }
