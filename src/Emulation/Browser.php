@@ -115,4 +115,11 @@ enum Browser: string
             default => null,
         };
     }
+
+    public static function random(): self
+    {
+        $cases = self::cases();
+
+        return $cases[array_rand($cases)];
+    }
 }

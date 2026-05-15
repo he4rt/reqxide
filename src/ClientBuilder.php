@@ -10,6 +10,7 @@ use Reqxide\Contract\RetryPolicyInterface;
 use Reqxide\Contract\TransportInterface;
 use Reqxide\Cookie\CookieJar;
 use Reqxide\Emulation\Browser;
+use Reqxide\Emulation\Platform;
 use Reqxide\Emulation\Profile;
 use Reqxide\Middleware\CompressionMiddleware;
 use Reqxide\Middleware\CookieMiddleware;
@@ -26,6 +27,8 @@ final class ClientBuilder
     private ?Browser $browser = null;
 
     private ?Profile $profile = null;
+
+    private ?Platform $platform = null;
 
     private ?TransportInterface $transport = null;
 
@@ -60,6 +63,13 @@ final class ClientBuilder
     public function profile(Profile $profile): self
     {
         $this->profile = $profile;
+
+        return $this;
+    }
+
+    public function platform(Platform $platform): self
+    {
+        $this->platform = $platform;
 
         return $this;
     }
@@ -145,6 +155,11 @@ final class ClientBuilder
         // Resolve profile
         $profile = $this->profile ?? $this->browser?->profile() ?? new Profile;
 
+        // Apply platform overrides to profile headers
+        if ($this->platform instanceof Platform) {
+            $profile = $this->applyPlatform($profile, $this->platform);
+        }
+
         // Resolve transport
         $transport = $this->transport ?? TransportFactory::create();
 
@@ -170,6 +185,62 @@ final class ClientBuilder
             pipeline: $pipeline,
             defaultHeaders: $this->defaultHeaders,
         );
+    }
+
+    private function applyPlatform(Profile $profile, Platform $platform): Profile
+    {
+        $headers = $profile->defaultHeaders;
+
+        if (isset($headers['User-Agent'])) {
+            $headers['User-Agent'] = $this->rewriteUserAgent($headers['User-Agent'], $platform);
+        }
+
+        if (isset($headers['sec-ch-ua-platform'])) {
+            $headers['sec-ch-ua-platform'] = $platform->secChUaPlatform();
+        }
+
+        if (isset($headers['sec-ch-ua-mobile'])) {
+            $headers['sec-ch-ua-mobile'] = $platform->isMobile() ? '?1' : '?0';
+        }
+
+        return new Profile(
+            tlsOptions: $profile->tlsOptions,
+            http2Options: $profile->http2Options,
+            http1Options: $profile->http1Options,
+            defaultHeaders: $headers,
+            originalHeaderMap: $profile->originalHeaderMap,
+            connectionGroup: $profile->connectionGroup,
+            impersonateTarget: $profile->impersonateTarget,
+        );
+    }
+
+    private function rewriteUserAgent(string $ua, Platform $platform): string
+    {
+        $platformString = $platform->userAgentPlatform();
+
+        // Chrome/Edge: Mozilla/5.0 ({platform}) AppleWebKit/...
+        if (preg_match('#^(Mozilla/5\.0 \()([^)]+)(\) AppleWebKit/537\.36.+)$#', $ua, $m)) {
+            if ($platform === Platform::IOS) {
+                $suffix = preg_replace('#Chrome/[\d.]+#', 'CriOS/$0', $m[3]) ?? $m[3];
+                $suffix = str_replace('CriOS/CriOS/', 'CriOS/', $suffix);
+
+                return $m[1].$platformString.$suffix;
+            }
+
+            return $m[1].$platformString.$m[3];
+        }
+
+        // Firefox: Mozilla/5.0 ({platform}; rv:{ver}) Gecko/...
+        if (preg_match('#^(Mozilla/5\.0 \()([^;]+(?:;[^)]*)?)(; rv:[\d.]+\) Gecko/.+)$#', $ua, $m)) {
+            return $m[1].$platformString.$m[3];
+        }
+
+        // Safari: Mozilla/5.0 ({platform}) AppleWebKit/605...
+        if (preg_match('#^(Mozilla/5\.0 \()([^)]+)(\) AppleWebKit/605.+)$#', $ua, $m)) {
+            return $m[1].$platformString.$m[3];
+        }
+
+        return $ua;
     }
 
     /** @return list<MiddlewareInterface> */

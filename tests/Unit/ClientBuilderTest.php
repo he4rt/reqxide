@@ -11,6 +11,7 @@ use Reqxide\ClientBuilder;
 use Reqxide\Contract\TransportInterface;
 use Reqxide\Cookie\CookieJar;
 use Reqxide\Emulation\Browser;
+use Reqxide\Emulation\Platform;
 use Reqxide\Emulation\Profile;
 use Reqxide\Proxy\Proxy;
 use Reqxide\Redirect\RedirectPolicy;
@@ -262,6 +263,52 @@ it('returns a ClientBuilder from Client::builder()', function (): void {
     $builder = Client::builder();
 
     expect($builder)->toBeInstanceOf(ClientBuilder::class);
+});
+
+it('platform overrides sec-ch-ua-platform and User-Agent', function (): void {
+    $transport = createMockTransport();
+    $client = Client::builder()
+        ->emulation(Browser::Chrome145)
+        ->platform(Platform::Windows)
+        ->transport($transport)
+        ->build();
+
+    $request = new Request('GET', 'https://example.com');
+    $client->sendRequest($request);
+
+    expect($transport->lastProfile->defaultHeaders['sec-ch-ua-platform'])->toBe('"Windows"')
+        ->and($transport->lastProfile->defaultHeaders['sec-ch-ua-mobile'])->toBe('?0')
+        ->and($transport->lastProfile->defaultHeaders['User-Agent'])->toContain('Windows NT 10.0');
+});
+
+it('platform Android sets mobile flag', function (): void {
+    $transport = createMockTransport();
+    $client = Client::builder()
+        ->emulation(Browser::Chrome145)
+        ->platform(Platform::Android)
+        ->transport($transport)
+        ->build();
+
+    $request = new Request('GET', 'https://example.com');
+    $client->sendRequest($request);
+
+    expect($transport->lastProfile->defaultHeaders['sec-ch-ua-mobile'])->toBe('?1')
+        ->and($transport->lastProfile->defaultHeaders['sec-ch-ua-platform'])->toBe('"Android"')
+        ->and($transport->lastProfile->defaultHeaders['User-Agent'])->toContain('Android');
+});
+
+it('platform does not affect profile without relevant headers', function (): void {
+    $transport = createMockTransport();
+    $client = Client::builder()
+        ->profile(new Profile(defaultHeaders: ['X-Custom' => 'value']))
+        ->platform(Platform::Linux)
+        ->transport($transport)
+        ->build();
+
+    $request = new Request('GET', 'https://example.com');
+    $client->sendRequest($request);
+
+    expect($transport->lastProfile->defaultHeaders)->toBe(['X-Custom' => 'value']);
 });
 
 it('profile takes precedence over emulation', function (): void {
