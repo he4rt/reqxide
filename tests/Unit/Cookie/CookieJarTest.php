@@ -474,3 +474,30 @@ it('normalizePath returns default when strrpos finds no slash beyond root', func
 
     expect($jar->getCookies(new Uri('https://example.com/')))->toBe(['x=y']);
 });
+
+it('allows cookie with exact IP address match', function (): void {
+    $jar = new CookieJar;
+    $uri = new Uri('https://192.168.1.1/');
+
+    $jar->setCookies(['foo=bar; Path=/'], $uri);
+
+    expect($jar->getCookies(new Uri('https://192.168.1.1/')))->toBe(['foo=bar']);
+});
+
+it('rejects cookie with IP address domain suffix matching', function (): void {
+    $jar = new CookieJar;
+    $uri = new Uri('https://192.168.1.1/');
+
+    $jar->setCookies(['foo=bar; Domain=1.1; Path=/'], $uri);
+
+    expect($jar->getCookies(new Uri('https://192.168.1.1/')))->toBe([]);
+});
+
+it('allows cookie with exact IPv6 address match', function (): void {
+    $jar = new CookieJar;
+    $uri = new Uri('https://[::1]/');
+
+    $jar->setCookies(['foo=bar; Path=/'], $uri);
+
+    expect($jar->getCookies(new Uri('https://[::1]/')))->toBe(['foo=bar']);
+});
