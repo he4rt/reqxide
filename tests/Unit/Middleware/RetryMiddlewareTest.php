@@ -166,6 +166,66 @@ it('gives up after max attempts and returns last response', function (): void {
         ->and($callCount)->toBe(4);
 });
 
+it('applies delay between retries on response failure', function (): void {
+    $policy = new class implements RetryPolicyInterface
+    {
+        public function shouldRetry(RequestInterface $request, ?ResponseInterface $response, ?Throwable $exception, int $attempt): bool
+        {
+            return $attempt < 1;
+        }
+
+        public function delayMs(int $attempt): int
+        {
+            return 1;
+        }
+    };
+
+    $middleware = new RetryMiddleware($policy);
+    $request = new Request('GET', 'https://example.com');
+
+    $callCount = 0;
+    $result = $middleware->handle($request, static function (RequestInterface $req) use (&$callCount): ResponseInterface {
+        $callCount++;
+
+        return new Response(500);
+    });
+
+    expect($callCount)->toBe(2)
+        ->and($result->getStatusCode())->toBe(500);
+});
+
+it('applies delay between retries on exception', function (): void {
+    $policy = new class implements RetryPolicyInterface
+    {
+        public function shouldRetry(RequestInterface $request, ?ResponseInterface $response, ?Throwable $exception, int $attempt): bool
+        {
+            return $attempt < 1 && $exception instanceof Throwable;
+        }
+
+        public function delayMs(int $attempt): int
+        {
+            return 1;
+        }
+    };
+
+    $middleware = new RetryMiddleware($policy);
+    $request = new Request('GET', 'https://example.com');
+
+    $callCount = 0;
+    $result = $middleware->handle($request, static function (RequestInterface $req) use (&$callCount): ResponseInterface {
+        $callCount++;
+
+        if ($callCount === 1) {
+            throw new RuntimeException('fail');
+        }
+
+        return new Response(200);
+    });
+
+    expect($callCount)->toBe(2)
+        ->and($result->getStatusCode())->toBe(200);
+});
+
 it('re-throws exception when no more retries', function (): void {
     $policy = new class implements RetryPolicyInterface
     {

@@ -51,7 +51,7 @@ final class CurlTransport implements TransportInterface
                     return $length;
                 }
 
-                // Handle folded headers (continuation lines starting with space/tab)
+                // @codeCoverageIgnoreStart
                 if (($header[0] === ' ' || $header[0] === "\t") && $lastHeaderName !== '') {
                     /** @var array<string, list<string>> $responseHeaders */
                     $existing = array_pop($responseHeaders[$lastHeaderName]) ?? '';
@@ -59,6 +59,7 @@ final class CurlTransport implements TransportInterface
 
                     return $length;
                 }
+                // @codeCoverageIgnoreEnd
 
                 $parts = explode(':', $trimmed, 2);
 

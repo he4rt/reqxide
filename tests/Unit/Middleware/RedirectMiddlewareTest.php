@@ -6,6 +6,8 @@ use Nyholm\Psr7\Request;
 use Nyholm\Psr7\Response;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Reqxide\Contract\RedirectPolicyInterface;
+use Reqxide\Exception\RedirectException;
 use Reqxide\Middleware\RedirectMiddleware;
 use Reqxide\Redirect\RedirectPolicy;
 
@@ -274,4 +276,165 @@ it('returns redirect response when no Location header', function (): void {
     $result = $middleware->handle($request, static fn (RequestInterface $req): ResponseInterface => $response);
 
     expect($result->getStatusCode())->toBe(301);
+});
+
+it('throws RedirectException when too many redirects', function (): void {
+    $policy = new class implements RedirectPolicyInterface
+    {
+        private int $calls = 0;
+
+        public function shouldFollow(RequestInterface $request, ResponseInterface $response, int $redirectCount): bool
+        {
+            $this->calls++;
+
+            return $this->calls <= 2;
+        }
+
+        public function maxRedirects(): int
+        {
+            return 1;
+        }
+    };
+
+    $middleware = new RedirectMiddleware($policy);
+    $request = new Request('GET', 'https://example.com/start');
+
+    $middleware->handle($request, static function (RequestInterface $req): ResponseInterface {
+        return new Response(301, ['Location' => 'https://example.com/loop']);
+    });
+})->throws(RedirectException::class, 'Too many redirects');
+
+it('strips sensitive headers on cross-origin scheme change', function (): void {
+    $policy = RedirectPolicy::limited(10);
+    $middleware = new RedirectMiddleware($policy);
+    $request = new Request('GET', 'https://example.com/secure', [
+        'Authorization' => 'Bearer token',
+    ]);
+
+    /** @var RequestInterface|null $captured */
+    $captured = null;
+    $callCount = 0;
+
+    $middleware->handle($request, static function (RequestInterface $req) use (&$callCount, &$captured): ResponseInterface {
+        $callCount++;
+
+        if ($callCount === 1) {
+            return new Response(302, ['Location' => 'http://example.com/insecure']);
+        }
+
+        $captured = $req;
+
+        return new Response(200);
+    });
+
+    expect($captured)->toBeInstanceOf(RequestInterface::class)
+        ->and($captured->hasHeader('Authorization'))->toBeFalse();
+});
+
+it('strips sensitive headers on cross-origin port change', function (): void {
+    $policy = RedirectPolicy::limited(10);
+    $middleware = new RedirectMiddleware($policy);
+    $request = new Request('GET', 'https://example.com:443/page', [
+        'Cookie' => 'session=abc',
+    ]);
+
+    /** @var RequestInterface|null $captured */
+    $captured = null;
+    $callCount = 0;
+
+    $middleware->handle($request, static function (RequestInterface $req) use (&$callCount, &$captured): ResponseInterface {
+        $callCount++;
+
+        if ($callCount === 1) {
+            return new Response(302, ['Location' => 'https://example.com:8443/page']);
+        }
+
+        $captured = $req;
+
+        return new Response(200);
+    });
+
+    expect($captured)->toBeInstanceOf(RequestInterface::class)
+        ->and($captured->hasHeader('Cookie'))->toBeFalse();
+});
+
+it('strips body and content headers when method changes on redirect', function (): void {
+    $policy = RedirectPolicy::limited(10);
+    $middleware = new RedirectMiddleware($policy);
+    $request = new Request('POST', 'https://example.com/submit', [
+        'Content-Type' => 'application/json',
+        'Content-Length' => '14',
+    ], '{"key":"value"}');
+
+    /** @var RequestInterface|null $captured */
+    $captured = null;
+    $callCount = 0;
+
+    $middleware->handle($request, static function (RequestInterface $req) use (&$callCount, &$captured): ResponseInterface {
+        $callCount++;
+
+        if ($callCount === 1) {
+            return new Response(303, ['Location' => 'https://example.com/result']);
+        }
+
+        $captured = $req;
+
+        return new Response(200);
+    });
+
+    expect($captured)->toBeInstanceOf(RequestInterface::class)
+        ->and($captured->getMethod())->toBe('GET')
+        ->and((string) $captured->getBody())->toBe('')
+        ->and($captured->hasHeader('Content-Type'))->toBeFalse()
+        ->and($captured->hasHeader('Content-Length'))->toBeFalse();
+});
+
+it('resolves relative Location path with dot segments', function (): void {
+    $policy = RedirectPolicy::limited(10);
+    $middleware = new RedirectMiddleware($policy);
+    $request = new Request('GET', 'https://example.com/a/b/c');
+
+    /** @var RequestInterface|null $captured */
+    $captured = null;
+    $callCount = 0;
+
+    $middleware->handle($request, static function (RequestInterface $req) use (&$callCount, &$captured): ResponseInterface {
+        $callCount++;
+
+        if ($callCount === 1) {
+            return new Response(302, ['Location' => '../d']);
+        }
+
+        $captured = $req;
+
+        return new Response(200);
+    });
+
+    expect($captured)->toBeInstanceOf(RequestInterface::class)
+        ->and($captured->getUri()->getPath())->toBe('/a/d');
+});
+
+it('resolves relative Location path', function (): void {
+    $policy = RedirectPolicy::limited(10);
+    $middleware = new RedirectMiddleware($policy);
+    $request = new Request('GET', 'https://example.com/dir/page');
+
+    /** @var RequestInterface|null $captured */
+    $captured = null;
+    $callCount = 0;
+
+    $middleware->handle($request, static function (RequestInterface $req) use (&$callCount, &$captured): ResponseInterface {
+        $callCount++;
+
+        if ($callCount === 1) {
+            return new Response(302, ['Location' => 'other']);
+        }
+
+        $captured = $req;
+
+        return new Response(200);
+    });
+
+    expect($captured)->toBeInstanceOf(RequestInterface::class)
+        ->and($captured->getUri()->getPath())->toBe('/dir/other');
 });

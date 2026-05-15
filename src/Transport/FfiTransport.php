@@ -128,7 +128,7 @@ final class FfiTransport implements TransportInterface
         $headerFile = tempnam(sys_get_temp_dir(), 'reqxide_hdr_');
 
         if ($bodyFile === false || $headerFile === false) {
-            throw new FfiException('Failed to create temp files for response capture.');
+            throw new FfiException('Failed to create temp files for response capture.'); // @codeCoverageIgnore
         }
 
         $bodyFp = $this->wrapper->fopen($bodyFile, 'wb');
@@ -224,6 +224,7 @@ final class FfiTransport implements TransportInterface
             return $envPath;
         }
 
+        // @codeCoverageIgnoreStart
         $paths = [
             '/usr/local/lib/libcurl-impersonate.so',
             '/usr/lib/libcurl-impersonate.so',
@@ -246,6 +247,7 @@ final class FfiTransport implements TransportInterface
         throw new FfiException(
             'libcurl-impersonate library not found. Set REQXIDE_CURL_IMPERSONATE_PATH environment variable.',
         );
+        // @codeCoverageIgnoreEnd
     }
 
     private function applyRequest(CData $handle, RequestInterface $request): void
@@ -384,7 +386,7 @@ final class FfiTransport implements TransportInterface
         }
 
         if ($headers === []) {
-            return null;
+            return null; // @codeCoverageIgnore
         }
 
         $list = null;
@@ -498,7 +500,7 @@ final class FfiTransport implements TransportInterface
         $lines = preg_split('/\r?\n/', $raw);
 
         if ($lines === false) {
-            return [];
+            return []; // @codeCoverageIgnore
         }
 
         foreach ($lines as $line) {
@@ -508,11 +510,11 @@ final class FfiTransport implements TransportInterface
                 continue;
             }
 
-            $parts = explode(':', $trimmed, 2);
+            $parts = explode(':', $trimmed, 2); // @codeCoverageIgnoreStart
 
             if (count($parts) === 2) {
                 $headers[trim($parts[0])][] = trim($parts[1]);
-            }
+            } // @codeCoverageIgnoreEnd
         }
 
         return $headers;

@@ -13,4 +13,7 @@
             <directory suffix=".php">./tests</directory>
         </testsuite>
     </testsuites>
+    <php>
+        <env name="PEST_TIA" value="1"/>
+    </php>
 </phpunit>

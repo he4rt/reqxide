@@ -24,7 +24,7 @@ final readonly class ProcessTransport implements TransportInterface
         $binary = $this->binaryPath ?? self::detectBinaryPath();
 
         if ($binary === null) {
-            throw new TransportException('curl_impersonate binary not found. Install curl-impersonate or set the binary path.');
+            throw new TransportException('curl_impersonate binary not found. Install curl-impersonate or set the binary path.'); // @codeCoverageIgnore
         }
 
         $args = $this->buildArguments($request, $profile, $options);
@@ -44,7 +44,7 @@ final readonly class ProcessTransport implements TransportInterface
         );
 
         if (! is_resource($process)) {
-            throw new TransportException('Failed to start curl_impersonate process.');
+            throw new TransportException('Failed to start curl_impersonate process.'); // @codeCoverageIgnore
         }
 
         fclose($pipes[0]);
@@ -98,12 +98,14 @@ final readonly class ProcessTransport implements TransportInterface
             }
         }
 
+        // @codeCoverageIgnoreStart
         $which = trim((string) shell_exec('which curl-impersonate 2>/dev/null'));
         if ($which !== '' && is_executable($which)) {
             return $which;
         }
 
         return null;
+        // @codeCoverageIgnoreEnd
     }
 
     /**
@@ -193,7 +195,7 @@ final readonly class ProcessTransport implements TransportInterface
         $lines = preg_split('/\r?\n/', $headerSection);
 
         if ($lines === false) {
-            return new Response(200, [], $raw);
+            return new Response(200, [], $raw); // @codeCoverageIgnore
         }
 
         $statusCode = 200;

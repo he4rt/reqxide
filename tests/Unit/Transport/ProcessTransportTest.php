@@ -86,6 +86,34 @@ it('throws TransportException when binary path is null and cannot be detected', 
     $transport->send($request, $profile, $options);
 })->throws(TransportException::class, 'curl_impersonate binary not found');
 
+it('detects binary path from environment variable', function (): void {
+    $scriptPath = sys_get_temp_dir().'/reqxide_test_detect_'.getmypid().'.sh';
+    file_put_contents($scriptPath, "#!/bin/sh\necho ok");
+    chmod($scriptPath, 0755);
+
+    try {
+        putenv('REQXIDE_CURL_IMPERSONATE_PATH='.$scriptPath);
+        $result = ProcessTransport::detectBinaryPath();
+
+        expect($result)->toBe($scriptPath);
+    } finally {
+        putenv('REQXIDE_CURL_IMPERSONATE_PATH');
+        unlink($scriptPath);
+    }
+});
+
+it('detects binary path via which command', function (): void {
+    $result = ProcessTransport::detectBinaryPath();
+
+    expect($result)->not->toBeNull()
+        ->and(is_executable($result))->toBeTrue();
+})->skip(
+    trim((string) shell_exec('which curl-impersonate 2>/dev/null')) === ''
+    && ! is_executable('/usr/bin/curl-impersonate')
+    && ! is_executable('/usr/local/bin/curl-impersonate'),
+    'curl-impersonate binary not found on this system',
+);
+
 it('sends request successfully with echo binary', function (): void {
     // Create a tiny shell script that mimics a curl response
     $scriptPath = sys_get_temp_dir().'/reqxide_test_curl_'.getmypid().'.sh';

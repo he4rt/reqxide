@@ -98,3 +98,16 @@ it('returns empty defaultHeaders via accessor method when not set', function ():
 
     expect($profile->defaultHeaders())->toBe([]);
 });
+
+it('returns originalHeaderMap via accessor method', function (): void {
+    $headerMap = new OriginalHeaderMap(['Host', 'Accept']);
+    $profile = new Profile(originalHeaderMap: $headerMap);
+
+    expect($profile->originalHeaderMap())->toBe($headerMap);
+});
+
+it('returns null originalHeaderMap via accessor method when not set', function (): void {
+    $profile = new Profile;
+
+    expect($profile->originalHeaderMap())->toBeNull();
+});

@@ -112,6 +112,16 @@ it('budget blocks further retries after too many retries', function (): void {
     expect($retryCount)->toBe(10);
 });
 
+it('default() does not retry non-idempotent methods', function (): void {
+    $policy = RetryPolicy::default();
+
+    $post = new Request('POST', 'https://example.com');
+    $patch = new Request('PATCH', 'https://example.com');
+
+    expect($policy->shouldRetry($post, new Response(500), null, 0))->toBeFalse()
+        ->and($policy->shouldRetry($patch, null, new RuntimeException('fail'), 0))->toBeFalse();
+});
+
 it('budget gets deposit when shouldRetry returns false for non-retryable response', function (): void {
     $policy = RetryPolicy::default();
     $request = new Request('GET', 'https://example.com');

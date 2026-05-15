@@ -361,3 +361,116 @@ it('accepts matching parent domain from subdomain request', function (): void {
 
     expect($cookies)->toBe(['session=abc']);
 });
+
+it('skips expired cookies in getCookies', function (): void {
+    $jar = new CookieJar;
+    $uri = new Uri('https://example.com/');
+
+    $jar->add(
+        new Cookie(name: 'expired', value: 'old', path: '/', expires: new DateTimeImmutable('2099-12-31')),
+        $uri,
+    );
+    $jar->add(
+        new Cookie(name: 'fresh', value: 'new', path: '/', expires: new DateTimeImmutable('2099-12-31')),
+        $uri,
+    );
+
+    expect($jar->getCookies($uri))->toHaveCount(2);
+
+    $reflection = new ReflectionClass($jar);
+    $prop = $reflection->getProperty('cookies');
+    $cookies = $prop->getValue($jar);
+    $cookies['example.com']['/']['expired'] = new Cookie(
+        name: 'expired',
+        value: 'old',
+        path: '/',
+        expires: new DateTimeImmutable('1970-01-01'),
+    );
+    $prop->setValue($jar, $cookies);
+
+    expect($jar->getCookies($uri))->toBe(['fresh=new']);
+});
+
+it('uses default path for get when URI path is empty', function (): void {
+    $jar = new CookieJar;
+    $uri = new Uri('https://example.com/');
+
+    $jar->add(new Cookie(name: 'foo', value: 'bar', path: '/'), $uri);
+
+    $result = $jar->get('foo', new Uri('https://example.com'));
+
+    expect($result)->not->toBeNull()
+        ->and($result->value)->toBe('bar');
+});
+
+it('uses default path for remove when URI path is empty', function (): void {
+    $jar = new CookieJar;
+    $uri = new Uri('https://example.com/');
+
+    $jar->add(new Cookie(name: 'foo', value: 'bar', path: '/'), $uri);
+
+    $jar->remove('foo', new Uri('https://example.com'));
+
+    expect($jar->get('foo', $uri))->toBeNull();
+});
+
+it('rejects cookie with empty domain attribute', function (): void {
+    $jar = new CookieJar;
+    $uri = new Uri('https://example.com/');
+
+    $jar->setCookies(['foo=bar; Domain=; Path=/'], $uri);
+
+    expect($jar->getCookies($uri))->toBe([]);
+});
+
+it('normalizes cookie path that does not start with slash to default', function (): void {
+    $jar = new CookieJar;
+    $uri = new Uri('https://example.com/some/path');
+
+    $jar->add(new Cookie(name: 'x', value: 'y', path: null), $uri);
+
+    expect($jar->get('x', new Uri('https://example.com/some')))->not->toBeNull();
+});
+
+it('domainMatch returns false for empty domain via cookie with empty normalized domain', function (): void {
+    $jar = new CookieJar;
+    $uri = new Uri('https://example.com/');
+
+    $jar->setCookies(['foo=bar; Domain=.; Path=/'], $uri);
+
+    expect($jar->getCookies($uri))->toBe([]);
+});
+
+it('domainMatch returns false when domain normalizes to empty string in getCookies', function (): void {
+    $jar = new CookieJar;
+    $uri = new Uri('https://example.com/');
+
+    $jar->add(new Cookie(name: 'x', value: 'y', path: '/'), $uri);
+
+    $reflection = new ReflectionClass($jar);
+    $prop = $reflection->getProperty('cookies');
+    $cookies = $prop->getValue($jar);
+    $cookies['']['/'] = $cookies['example.com']['/'];
+    unset($cookies['example.com']);
+    $prop->setValue($jar, $cookies);
+
+    expect($jar->getCookies($uri))->toBe([]);
+});
+
+it('normalizePath returns default for path without slash', function (): void {
+    $jar = new CookieJar;
+    $uri = new Uri('https://example.com');
+
+    $jar->add(new Cookie(name: 'x', value: 'y'), $uri);
+
+    expect($jar->getCookies(new Uri('https://example.com/')))->toBe(['x=y']);
+});
+
+it('normalizePath returns default when strrpos finds no slash beyond root', function (): void {
+    $jar = new CookieJar;
+    $uri = new Uri('https://example.com/file');
+
+    $jar->add(new Cookie(name: 'x', value: 'y'), $uri);
+
+    expect($jar->getCookies(new Uri('https://example.com/')))->toBe(['x=y']);
+});

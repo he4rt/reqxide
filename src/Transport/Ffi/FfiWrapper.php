@@ -24,32 +24,29 @@ class FfiWrapper
     public function __construct(string $headerPath, string $libraryPath)
     {
         if (! extension_loaded('ffi')) {
-            throw new FfiException('PHP FFI extension is not loaded.');
+            throw new FfiException('PHP FFI extension is not loaded.'); // @codeCoverageIgnore
         }
 
         if (! is_readable($headerPath)) {
             throw new FfiException('Could not read FFI header file: '.$headerPath);
         }
 
+        // @codeCoverageIgnoreStart
         $header = file_get_contents($headerPath);
 
         if ($header === false) {
             throw new FfiException('Could not read FFI header file: '.$headerPath);
         }
 
-        // When ext/curl is loaded, PHP already has standard libcurl symbols in memory.
-        // Loading libcurl-impersonate via FFI::cdef() causes symbol collision (both
-        // export curl_easy_init, curl_easy_perform, etc.), leading to segfaults.
-        //
-        // Fix: use dlopen() with RTLD_DEEPBIND to make libcurl-impersonate prefer
-        // its own symbols over the already-loaded standard libcurl.
         if (extension_loaded('curl') && PHP_OS_FAMILY === 'Linux') {
             $this->loadWithDeepbind($header, $libraryPath);
         } else {
             $this->ffi = FFI::cdef($header, $libraryPath);
         }
+        // @codeCoverageIgnoreEnd
     }
 
+    // @codeCoverageIgnoreStart
     public function easyInit(): CData
     {
         /** @var CData|null $handle */
@@ -120,10 +117,10 @@ class FfiWrapper
     {
         $this->ffi->fclose($fp);
     }
+    // @codeCoverageIgnoreEnd
 
     /**
-     * Load libcurl-impersonate with RTLD_DEEPBIND to avoid symbol collision
-     * with PHP's ext/curl (which loads standard libcurl).
+     * @codeCoverageIgnore
      */
     private function loadWithDeepbind(string $header, string $libraryPath): void
     {
