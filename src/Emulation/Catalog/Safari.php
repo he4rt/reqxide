@@ -13,10 +13,10 @@ use Reqxide\Http2\SettingId;
 use Reqxide\Http2\SettingsOrder;
 use Reqxide\Http2\StreamDependency;
 use Reqxide\Tls\AlpnProtocol;
-use Reqxide\Tls\CertificateCompressor;
 use Reqxide\Tls\KeyShare;
 use Reqxide\Tls\TlsOptions;
 use Reqxide\Tls\TlsVersion;
+use Reqxide\Tls\ZlibCompressor;
 
 final class Safari
 {
@@ -276,7 +276,7 @@ final class Safari
             ->sessionTicket(false);
 
         if ($certCompression) {
-            $builder->certificateCompressors([CertificateCompressor::Zlib]);
+            $builder->certificateCompressors([new ZlibCompressor]);
         }
 
         return $builder->build();
@@ -299,7 +299,7 @@ final class Safari
             ->permuteExtensions(false)
             ->enableEchGrease(false)
             ->sessionTicket(false)
-            ->certificateCompressors([CertificateCompressor::Zlib])
+            ->certificateCompressors([new ZlibCompressor])
             ->build();
     }
 
@@ -320,7 +320,7 @@ final class Safari
             ->permuteExtensions(false)
             ->enableEchGrease(false)
             ->sessionTicket(true)
-            ->certificateCompressors([CertificateCompressor::Zlib])
+            ->certificateCompressors([new ZlibCompressor])
             ->build();
     }
 

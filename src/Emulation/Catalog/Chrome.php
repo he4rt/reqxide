@@ -14,7 +14,7 @@ use Reqxide\Http2\SettingId;
 use Reqxide\Http2\SettingsOrder;
 use Reqxide\Http2\StreamDependency;
 use Reqxide\Tls\AlpnProtocol;
-use Reqxide\Tls\CertificateCompressor;
+use Reqxide\Tls\BrotliCompressor;
 use Reqxide\Tls\KeyShare;
 use Reqxide\Tls\TlsOptions;
 use Reqxide\Tls\TlsVersion;
@@ -526,7 +526,7 @@ final class Chrome
             ->enableEchGrease($ech)
             ->alpsUseNewCodepoint($alpsNew)
             ->sessionTicket(true)
-            ->certificateCompressors([CertificateCompressor::Brotli]);
+            ->certificateCompressors([new BrotliCompressor]);
 
         if ($keyShares !== null) {
             $builder->keyShares($keyShares);

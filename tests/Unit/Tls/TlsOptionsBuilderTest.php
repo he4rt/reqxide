@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 use Reqxide\Tls\AlpnProtocol;
 use Reqxide\Tls\AlpsProtocol;
-use Reqxide\Tls\CertificateCompressor;
+use Reqxide\Tls\BrotliCompressor;
 use Reqxide\Tls\KeyShare;
 use Reqxide\Tls\TlsOptions;
 use Reqxide\Tls\TlsOptionsBuilder;
 use Reqxide\Tls\TlsVersion;
+use Reqxide\Tls\ZlibCompressor;
+use Reqxide\Tls\ZstdCompressor;
 
 it('builds TlsOptions with defaults when nothing is set', function (): void {
     $builder = new TlsOptionsBuilder;
@@ -246,7 +248,7 @@ it('sets preserveTls13CipherList and returns self', function (): void {
 
 it('sets certificateCompressors and returns self', function (): void {
     $builder = new TlsOptionsBuilder;
-    $compressors = [CertificateCompressor::Brotli, CertificateCompressor::Zlib, CertificateCompressor::Zstd];
+    $compressors = [new BrotliCompressor, new ZlibCompressor, new ZstdCompressor];
 
     $result = $builder->certificateCompressors($compressors);
 
@@ -286,7 +288,7 @@ it('supports fluent chaining of all setters', function (): void {
     $alpnProtocols = [AlpnProtocol::Http1, AlpnProtocol::Http2];
     $alpsProtocols = [AlpsProtocol::Http2];
     $keyShares = [KeyShare::X25519, KeyShare::P256];
-    $compressors = [CertificateCompressor::Brotli];
+    $compressors = [new BrotliCompressor];
     $permutation = [1, 2, 3];
 
     $options = (new TlsOptionsBuilder)
