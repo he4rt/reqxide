@@ -45,7 +45,7 @@ it('has correct sec-ch-ua for Chrome 131', function (): void {
     $profile = Chrome::v131();
 
     expect($profile->defaultHeaders['sec-ch-ua'])
-        ->toBe('"Chromium";v="131", "Not_A Brand";v="24"');
+        ->toBe('"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"');
 });
 
 it('has correct HTTP/2 pseudo order of Method, Authority, Scheme, Path', function (): void {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Reqxide\Emulation\Catalog;
 
+use Reqxide\Emulation\ChromeSecChUa;
 use Reqxide\Emulation\Profile;
 use Reqxide\Http1\OriginalHeaderMap;
 use Reqxide\Http2\Http2Options;
@@ -38,7 +39,7 @@ final class Chrome
             version: '131.0.0.0',
             curvesList: 'X25519MLKEM768:X25519:P-256:P-384',
             keyShares: [KeyShare::X25519MLKEM768, KeyShare::X25519],
-            secChUa: '"Chromium";v="131", "Not_A Brand";v="24"',
+            secChUa: ChromeSecChUa::generate(131),
         );
     }
 
@@ -48,7 +49,7 @@ final class Chrome
             version: '130.0.0.0',
             curvesList: 'X25519MLKEM768:X25519:P-256:P-384',
             keyShares: [KeyShare::X25519MLKEM768, KeyShare::X25519],
-            secChUa: '"Chromium";v="130", "Not_A Brand";v="24"',
+            secChUa: ChromeSecChUa::generate(130),
         );
     }
 
@@ -58,7 +59,7 @@ final class Chrome
             version: '129.0.0.0',
             curvesList: 'X25519:P-256:P-384',
             keyShares: [KeyShare::X25519],
-            secChUa: '"Chromium";v="129", "Not_A Brand";v="24"',
+            secChUa: ChromeSecChUa::generate(129),
         );
     }
 
@@ -68,7 +69,7 @@ final class Chrome
             version: '128.0.0.0',
             curvesList: 'X25519:P-256:P-384',
             keyShares: [KeyShare::X25519],
-            secChUa: '"Chromium";v="128", "Not_A Brand";v="24"',
+            secChUa: ChromeSecChUa::generate(128),
         );
     }
 
@@ -136,7 +137,7 @@ final class Chrome
     {
         return self::ciProfile(
             version: '107.0.0.0',
-            secChUa: '"Google Chrome";v="107", "Chromium";v="107", "Not=A?Brand";v="24"',
+            secChUa: ChromeSecChUa::generate(107),
             platform: 'Windows',
             tls: self::ciTls(permute: false, ech: false, alpsNew: false),
             http2: self::ciHttp2(withEnablePush: true, withMaxConcurrent: true),
@@ -151,7 +152,7 @@ final class Chrome
     {
         return self::ciProfile(
             version: '110.0.0.0',
-            secChUa: '"Chromium";v="110", "Not A(Brand";v="24", "Google Chrome";v="110"',
+            secChUa: ChromeSecChUa::generate(110),
             platform: 'Windows',
             tls: self::ciTls(permute: true, ech: false, alpsNew: false),
             http2: self::ciHttp2(withEnablePush: true, withMaxConcurrent: true),
@@ -165,7 +166,7 @@ final class Chrome
     {
         return self::ciProfile(
             version: '116.0.0.0',
-            secChUa: '"Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"',
+            secChUa: ChromeSecChUa::generate(116),
             platform: 'Windows',
             tls: self::ciTls(permute: true, ech: false, alpsNew: false),
             http2: self::ciHttp2(withEnablePush: true, withMaxConcurrent: true),
@@ -180,7 +181,7 @@ final class Chrome
     {
         return self::ciProfile(
             version: '119.0.0.0',
-            secChUa: '"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
+            secChUa: ChromeSecChUa::generate(119),
             platform: 'macOS',
             tls: self::ciTls(permute: true, ech: true, alpsNew: false),
             http2: self::ciHttp2(withEnablePush: true, withMaxConcurrent: false),
@@ -194,7 +195,7 @@ final class Chrome
     {
         return self::ciProfile(
             version: '120.0.0.0',
-            secChUa: '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            secChUa: ChromeSecChUa::generate(120),
             platform: 'macOS',
             tls: self::ciTls(permute: true, ech: true, alpsNew: false),
             http2: self::ciHttp2(withEnablePush: true, withMaxConcurrent: false),
@@ -208,7 +209,7 @@ final class Chrome
     {
         return self::ciProfile(
             version: '123.0.0.0',
-            secChUa: '"Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"',
+            secChUa: ChromeSecChUa::generate(123),
             platform: 'macOS',
             tls: self::ciTls(permute: true, ech: true, alpsNew: false),
             http2: self::ciHttp2(withEnablePush: true, withMaxConcurrent: false),
@@ -223,7 +224,7 @@ final class Chrome
     {
         return self::ciProfile(
             version: '124.0.0.0',
-            secChUa: '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+            secChUa: ChromeSecChUa::generate(124),
             platform: 'macOS',
             tls: self::ciTls(
                 permute: true,
@@ -244,7 +245,7 @@ final class Chrome
     {
         return self::ciProfile(
             version: '133.0.0.0',
-            secChUa: '"Not(A:Brand";v="99", "Google Chrome";v="133", "Chromium";v="133"',
+            secChUa: ChromeSecChUa::generate(133),
             platform: 'macOS',
             tls: self::ciTls(
                 permute: true,
@@ -264,7 +265,7 @@ final class Chrome
     {
         return self::ciProfile(
             version: '136.0.0.0',
-            secChUa: '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
+            secChUa: ChromeSecChUa::generate(136),
             platform: 'macOS',
             tls: self::ciTls(
                 permute: true,
@@ -285,7 +286,7 @@ final class Chrome
     {
         return self::ciProfile(
             version: '142.0.0.0',
-            secChUa: '"Chromium";v="142", "Google Chrome";v="142", "Not:A-Brand";v="99"',
+            secChUa: ChromeSecChUa::generate(142),
             platform: 'macOS',
             tls: self::ciTls(
                 permute: true,
@@ -306,7 +307,7 @@ final class Chrome
     {
         return self::ciProfile(
             version: '145.0.0.0',
-            secChUa: '"Chromium";v="145", "Google Chrome";v="145", "Not:A-Brand";v="99"',
+            secChUa: ChromeSecChUa::generate(145),
             platform: 'macOS',
             tls: self::ciTls(
                 permute: true,
@@ -327,7 +328,7 @@ final class Chrome
     {
         return self::ciProfile(
             version: '146.0.0.0',
-            secChUa: '"Chromium";v="146", "Google Chrome";v="146", "Not:A-Brand";v="99"',
+            secChUa: ChromeSecChUa::generate(146),
             platform: 'macOS',
             tls: self::ciTls(
                 permute: true,
@@ -365,7 +366,7 @@ final class Chrome
     {
         return self::ciProfile(
             version: '131.0.0.0',
-            secChUa: '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+            secChUa: ChromeSecChUa::generate(131),
             platform: 'Android',
             tls: self::ciTls(permute: true, ech: true, alpsNew: false),
             http2: self::ciHttp2(withEnablePush: true, withMaxConcurrent: false),
