@@ -19,8 +19,13 @@ final readonly class CookieMiddleware implements MiddlewareInterface
         $cookies = $this->jar->getCookies($request->getUri());
 
         if ($cookies !== []) {
-            $cookieString = implode('; ', $cookies);
-            $request = $request->withHeader('Cookie', $cookieString);
+            if ($this->isHttp2OrHigher($request)) {
+                foreach ($cookies as $cookie) {
+                    $request = $request->withAddedHeader('Cookie', $cookie);
+                }
+            } else {
+                $request = $request->withHeader('Cookie', implode('; ', $cookies));
+            }
         }
 
         $response = $next($request);
@@ -33,5 +38,10 @@ final readonly class CookieMiddleware implements MiddlewareInterface
         }
 
         return $response;
+    }
+
+    private function isHttp2OrHigher(RequestInterface $request): bool
+    {
+        return in_array($request->getProtocolVersion(), ['2', '2.0', '3'], true);
     }
 }
