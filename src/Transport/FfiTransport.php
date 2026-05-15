@@ -449,7 +449,8 @@ final class FfiTransport implements TransportInterface
                 ProxyScheme::Http => 0,    // CURLPROXY_HTTP
                 ProxyScheme::Https => 2,   // CURLPROXY_HTTPS
                 ProxyScheme::Socks4 => 4,  // CURLPROXY_SOCKS4
-                ProxyScheme::Socks5 => 7,  // CURLPROXY_SOCKS5
+                ProxyScheme::Socks5 => 5,  // CURLPROXY_SOCKS5
+                ProxyScheme::Socks5h => 7,  // CURLPROXY_SOCKS5_HOSTNAME
             }); // CURLOPT_PROXYTYPE
 
             if ($options->proxy->username !== null && $options->proxy->username !== '') {
