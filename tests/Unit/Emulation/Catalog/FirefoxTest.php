@@ -15,7 +15,7 @@ it('returns a Profile with non-null tlsOptions and http2Options for each version
         ->and($profile->tlsOptions)->not->toBeNull()
         ->and($profile->http2Options)->not->toBeNull();
 })->with([
-    ['v133'], ['v135'], ['v136'], ['v144'], ['v147'],
+    ['v133'], ['v135'], ['v136'], ['v144'], ['v147'], ['v148'], ['v149'],
 ]);
 
 it('does NOT have GREASE enabled', function (): void {
@@ -125,4 +125,4 @@ it('CI profiles have extensionPermutation', function (string $method): void {
     $profile = Firefox::$method();
 
     expect($profile->tlsOptions?->extensionPermutation)->not->toBeNull();
-})->with([['v133'], ['v144'], ['v147']]);
+})->with([['v133'], ['v144'], ['v147'], ['v148'], ['v149']]);

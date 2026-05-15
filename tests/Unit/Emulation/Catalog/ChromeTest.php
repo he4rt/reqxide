@@ -19,7 +19,7 @@ it('returns a Profile with non-null tlsOptions and http2Options for each version
     ['v110'], ['v116'],
     ['v119'], ['v120'], ['v123'], ['v124'],
     ['v128'], ['v129'], ['v130'], ['v131'],
-    ['v133a'], ['v136'], ['v142'], ['v145'], ['v146'],
+    ['v133a'], ['v136'], ['v142'], ['v145'], ['v146'], ['v147'],
     ['v99Android'], ['v131Android'],
 ]);
 

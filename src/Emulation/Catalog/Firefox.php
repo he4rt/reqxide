@@ -79,6 +79,24 @@ final class Firefox
         );
     }
 
+    public static function v148(): Profile
+    {
+        return self::ciProfile(
+            version: '148.0',
+            signedCertTimestamps: true,
+            extensionOrder: [0, 23, 65281, 10, 11, 35, 16, 5, 34, 18, 51, 43, 13, 45, 28, 27, 65037],
+        );
+    }
+
+    public static function v149(): Profile
+    {
+        return self::ciProfile(
+            version: '149.0',
+            signedCertTimestamps: true,
+            extensionOrder: [0, 23, 65281, 10, 11, 35, 16, 5, 34, 18, 51, 43, 13, 45, 28, 27, 65037],
+        );
+    }
+
     // ─── wreq private helpers (unchanged) ───
 
     private static function baseTlsOptions(): TlsOptions
