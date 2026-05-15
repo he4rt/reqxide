@@ -3,7 +3,7 @@
     "description": "PHP TLS/HTTP fingerprinting library for browser emulation",
     "keywords": ["php", "tls", "fingerprint", "http2", "curl-impersonate", "web-scraping", "browser-emulation"],
     "license": "MIT",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "authors": [
         {
             "name": "Daniel Reis",
